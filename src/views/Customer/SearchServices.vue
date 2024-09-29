@@ -200,7 +200,7 @@ export default {
         }
       } catch (error) {
         console.error("Error submitting service request:", error);
-        alert("An error occurred while submitting the service request. Please try again later.");
+        alert("An Error occurred while submitting the request!");
       }
     },
   },

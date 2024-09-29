@@ -1,5 +1,5 @@
 <template>
-    Servicemen
+    History
   </template>
   
   <script>

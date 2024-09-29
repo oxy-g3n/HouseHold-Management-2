@@ -6,10 +6,10 @@
         <p>Service Management</p>
       </div>
       <div class="search-create-container">
-      <input type="text" class="form-control search-input" placeholder="Search" v-model="searchQuery">
-      <button type="button" class="btn btn-primary create-service-btn" @click="showModal = true">
-        Create Service
-      </button>
+        <input type="text" class="form-control search-input" placeholder="Search" v-model="searchQuery">
+        <button type="button" class="btn btn-primary create-service-btn" @click="showModal = true">
+          Create Service
+        </button>
       </div>
     </div>
 
@@ -37,7 +37,7 @@
     <div v-if="showDeleteModal" class="modal">
       <div class="modal-wrapper">
         <div class="modal-content">
-          <p class=" m-2">Are you sure you want to delete "{{ selectedService.service_name }}"?</p>
+          <p class="m-2">Are you sure you want to delete "{{ selectedService.service_name }}"?</p>
           <button @click="deleteService" class="btn btn-danger mb-1">Yes, Delete</button>
           <button @click="cancelDelete" class="btn btn-secondary mb-1">Cancel</button>
         </div>
@@ -114,7 +114,7 @@ export default {
       showModal: false,
       showDeleteModal: false,
       selectedService: null,
-      searchQuery: '', // Add this line
+      searchQuery: '',
       formData: {
         service_name: "",
         service_description: "",
@@ -164,10 +164,29 @@ export default {
       this.selectedService = service;
       this.showDeleteModal = true;
     },
-    deleteService() {
+    async deleteService() {
       if (this.selectedService) {
-        console.log(`Service Deleted: ${this.selectedService.service_name}`);
-        this.rawServices = this.rawServices.filter(s => s !== this.selectedService);
+        try {
+          const token = localStorage.getItem('admin_Token');
+          const response = await axios.post(
+            "http://127.0.0.1:5000/services/createService",
+            {
+              'action': "deleteService",
+              'service_name': this.selectedService.service_name
+            },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `${token}`
+              }
+            }
+          );
+          alert(response.data);
+          this.fetchServices(); // Refresh the services list
+        } catch (error) {
+          console.error('Error deleting service:', error);
+          alert(error.response?.data || 'An error occurred while deleting the service');
+        }
       }
       this.showDeleteModal = false;
       this.selectedService = null;
@@ -271,14 +290,11 @@ export default {
   border-radius: 5px;
   overflow: hidden;
   transition: box-shadow 0.3s;
-  text-align: center; /* Add this line */
-
+  text-align: center;
 }
 
 .service-card:hover {
   box-shadow: 0 8px 8px rgba(0,0,0,0.4);
-  
-
 }
 
 .service-content {
@@ -333,7 +349,6 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  
 }
 
 .modal-wrapper {
@@ -373,7 +388,6 @@ export default {
   .create-service-btn {
     margin-top: 10px;
   }
-  
 }
 
 .search-create-container {
@@ -381,9 +395,7 @@ export default {
   align-items: center;
 }
 
-
 .search-input {
-    margin-right: 1em;
-  }
-
+  margin-right: 1em;
+}
 </style>
