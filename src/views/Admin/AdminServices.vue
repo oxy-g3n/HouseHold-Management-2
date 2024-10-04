@@ -7,7 +7,7 @@
       </div>
       <div class="search-create-container">
         <input type="text" class="form-control search-input" placeholder="Search" v-model="searchQuery">
-        <button type="button" class="btn btn-primary create-service-btn" @click="showModal = true">
+        <button type="button" class="btn btn-primary create-service-btn" @click="showCreateServiceModal = true">
           Create Service
         </button>
       </div>
@@ -15,14 +15,20 @@
 
     <div class="content-container">
       <div v-if="processedServices.length" class="services-grid">
-        <div v-for="service in processedServices" :key="service.id" class="service-card">
+        <div v-for="service in processedServices" :key="service.service_id" class="service-card">
           <div class="service-content">
-            <h3>{{ service.service_name }}</h3>
-            <p>{{ service.service_desc }}</p>
-            <p>Max Price: ${{ service.max_price }}</p>
-            <p>Created: {{ service.date_created }}</p>
+            <h3>{{ service.service_info.service_name }}</h3>
+            <p>{{ service.service_info.service_desc }}</p>
+            <p>Created: {{ service.service_info.date_created }}</p>
+            <div class="button-group">
+              <button @click="showAddSubserviceModal(service)" class="btn btn-success">Add Subservice</button>
+              <button @click="showDeleteSubserviceModal(service)" class="btn btn-warning">Delete Subservice</button>
+            </div>
+            <button @click="toggleSubservices(service)" class="btn btn-info mt-2">
+              Show Subservices
+            </button>
           </div>
-          <button @click="confirmDelete(service)" class="btn btn-danger m-2">Delete Service</button>
+          <button @click="confirmDeleteService(service)" class="btn btn-danger mt-2">Delete Service</button>
         </div>
       </div>
       <div v-else-if="loading" class="loading">
@@ -33,69 +39,153 @@
       </div>
     </div>
 
-    <!-- Confirmation Modal -->
-    <div v-if="showDeleteModal" class="modal">
-      <div class="modal-wrapper">
-        <div class="modal-content">
-          <p class="m-2">Are you sure you want to delete "{{ selectedService.service_name }}"?</p>
-          <button @click="deleteService" class="btn btn-danger mb-1">Yes, Delete</button>
-          <button @click="cancelDelete" class="btn btn-secondary mb-1">Cancel</button>
-        </div>
-      </div>
+    <div class="subservices-section">
+      <h2 v-if="!selectedService">No service selected</h2>
+      <SubservicesTable
+        v-else
+        :subservices="selectedService.subservices"
+        :serviceName="selectedService.service_info.service_name"
+      />
     </div>
 
     <!-- Create Service Modal -->
-    <div v-if="showModal" class="modal fade show d-block" tabindex="-1" role="dialog">
+    <div v-if="showCreateServiceModal" class="modal fade show d-block" tabindex="-1" role="dialog">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Create New Service</h5>
-            <button type="button" class="close" @click="closeModal" aria-label="Close">
+            <button type="button" class="close" @click="closeCreateServiceModal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
           <div class="modal-body">
-            <form @submit.prevent="submitForm">
+            <form @submit.prevent="submitCreateServiceForm">
               <div class="form-group">
                 <label for="serviceName">Service Name</label>
                 <input
                   type="text"
                   class="form-control"
                   id="serviceName"
-                  v-model="formData.service_name"
+                  v-model="createServiceForm.service_name"
                   required
                 />
               </div>
-
               <div class="form-group">
                 <label for="serviceDescription">Service Description</label>
                 <textarea
                   class="form-control"
                   id="serviceDescription"
-                  v-model="formData.service_description"
+                  v-model="createServiceForm.service_description"
                   rows="3"
                   required
                 ></textarea>
               </div>
-
-              <div class="form-group">
-                <label for="maxPrice">Max Price</label>
-                <input
-                  type="number"
-                  class="form-control"
-                  id="maxPrice"
-                  v-model="formData.max_price"
-                  required
-                />
-              </div>
-
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" @click="closeModal">
-                  Cancel
-                </button>
+                <button type="button" class="btn btn-secondary" @click="closeCreateServiceModal">Cancel</button>
                 <button type="submit" class="btn btn-primary">Submit</button>
               </div>
             </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Subservice Modal -->
+    <div v-if="showAddSubserviceModalbool" class="modal fade show d-block" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Add Subservice</h5>
+            <button type="button" class="close" @click="closeAddSubserviceModal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="submitAddSubserviceForm">
+              <div class="form-group">
+                <label for="subserviceName">Subservice Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="subserviceName"
+                  v-model="addSubserviceForm.subservice_name"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="baseRate">Base Rate</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="baseRate"
+                  v-model.number="addSubserviceForm.base_rate"
+                  required
+                  min="0"
+                  step="1"
+                />
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @click="closeAddSubserviceModal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Submit</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Subservice Modal -->
+    <div v-if="showDeleteSubserviceModalbool" class="modal fade show d-block" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Delete Subservice</h5>
+            <button type="button" class="close" @click="closeDeleteSubserviceModal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="submitDeleteSubserviceForm">
+              <div class="form-group">
+                <label for="subserviceSelect">Select Subservice to Delete</label>
+                <select
+                  class="form-control"
+                  id="subserviceSelect"
+                  v-model="deleteSubserviceForm.subservice_name"
+                  required
+                >
+                  <option v-for="subservice in selectedService.subservices" :key="subservice.subservice_id" :value="subservice.subservice_name">
+                    {{ subservice.subservice_name }}
+                  </option>
+                </select>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @click="closeDeleteSubserviceModal">Cancel</button>
+                <button type="submit" class="btn btn-danger">Delete</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Service Confirmation Modal -->
+    <div v-if="showDeleteServiceModal" class="modal fade show d-block" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Confirm Delete Service</h5>
+            <button type="button" class="close" @click="closeDeleteServiceModal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p>Are you sure you want to delete "{{ selectedService.service_info.service_name }}"?</p>
+            <p>This will also delete all associated subservices.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeDeleteServiceModal">Cancel</button>
+            <button type="button" class="btn btn-danger" @click="deleteService">Delete</button>
           </div>
         </div>
       </div>
@@ -105,38 +195,53 @@
 
 <script>
 import axios from 'axios';
+import SubservicesTable from './SubservicesTable.vue';
 
 export default {
+  components: {
+    SubservicesTable
+  },
   data() {
     return {
       rawServices: [],
       loading: true,
-      showModal: false,
-      showDeleteModal: false,
+      showCreateServiceModal: false,
+      showAddSubserviceModalbool: false,
+      showDeleteSubserviceModalbool: false,
+      showDeleteServiceModal: false,
       selectedService: null,
       searchQuery: '',
-      formData: {
+      selectedService: null,
+
+      createServiceForm: {
         service_name: "",
         service_description: "",
-        max_price: ""
-      }
+      },
+      addSubserviceForm: {
+        subservice_name: "",
+        base_rate: null,
+      },
+      deleteSubserviceForm: {
+        subservice_name: "",
+      },
     };
   },
   computed: {
     processedServices() {
-      return this.rawServices
-        .map((service, index) => ({
-          ...service,
-          id: index
-        }))
-        .filter(service => {
-          const searchLower = this.searchQuery.toLowerCase();
-          return service.service_name.toLowerCase().includes(searchLower) ||
-                 service.service_desc.toLowerCase().includes(searchLower);
-        });
+      return this.rawServices.map(service => ({
+        ...service,
+        showSubservices: false
+      })).filter(service => {
+        const searchLower = this.searchQuery.toLowerCase();
+        return service.service_info.service_name.toLowerCase().includes(searchLower) || service.service_info.service_desc.toLowerCase().includes(searchLower);
+      });
     }
   },
   methods: {
+    toggleSubservices(service) {
+      service.showSubservices = !service.showSubservices;
+      this.selectedService = service.showSubservices ? service : null;
+    },
     async fetchServices() {
       this.loading = true;
       try {
@@ -160,69 +265,132 @@ export default {
         this.loading = false;
       }
     },
-    confirmDelete(service) {
+    showAddSubserviceModal(service) {
       this.selectedService = service;
-      this.showDeleteModal = true;
+      this.showAddSubserviceModalbool = true;
     },
-    async deleteService() {
-      if (this.selectedService) {
-        try {
-          const token = localStorage.getItem('admin_Token');
-          const response = await axios.post(
-            "http://127.0.0.1:5000/services/createService",
-            {
-              'action': "deleteService",
-              'service_name': this.selectedService.service_name
-            },
-            {
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `${token}`
-              }
-            }
-          );
-          alert(response.data);
-          this.fetchServices(); // Refresh the services list
-        } catch (error) {
-          console.error('Error deleting service:', error);
-          alert(error.response?.data || 'An error occurred while deleting the service');
-        }
-      }
-      this.showDeleteModal = false;
+    showDeleteSubserviceModal(service) {
+      this.selectedService = service;
+      this.showDeleteSubserviceModalbool = true;
+    },
+    confirmDeleteService(service) {
+      this.selectedService = service;
+      this.showDeleteServiceModal = true;
+    },
+    closeCreateServiceModal() {
+      this.showCreateServiceModal = false;
+      this.createServiceForm = { service_name: "", service_description: "" };
+    },
+    closeAddSubserviceModal() {
+      this.showAddSubserviceModalbool = false;
+      this.addSubserviceForm = { subservice_name: "", base_rate: null };
+    },
+    closeDeleteSubserviceModal() {
+      this.showDeleteSubserviceModalbool = false;
+      this.deleteSubserviceForm = { subservice_name: "" };
+    },
+    closeDeleteServiceModal() {
+      this.showDeleteServiceModal = false;
       this.selectedService = null;
     },
-    cancelDelete() {
-      this.showDeleteModal = false;
-      this.selectedService = null;
-    },
-    closeModal() {
-      this.showModal = false;
-    },
-    async submitForm() {
+    async submitCreateServiceForm() {
       try {
         const token = localStorage.getItem('admin_Token');
         const response = await axios.post(
           "http://127.0.0.1:5000/services/createService",
           {
-            'action': "createService",
-            'service_name': this.formData.service_name,
-            'service_description': this.formData.service_description,
-            'max_price': this.formData.max_price
+            action: "createService",
+            service_name: this.createServiceForm.service_name,
+            service_description: this.createServiceForm.service_description,
           },
           {
             headers: {
+              'Content-Type': 'application/json',
               Authorization: `${token}`
             }
           }
         );
         alert(response.data);
-        this.closeModal();
+        this.closeCreateServiceModal();
         this.fetchServices();
       } catch (error) {
         console.error(error);
         alert(error.response.data);
       }
-    }
+    },
+    async submitAddSubserviceForm() {
+      try {
+        const token = localStorage.getItem('admin_Token');
+        const response = await axios.post( "http://127.0.0.1:5000/services/SubService",
+          {
+            action: "createService",
+            sub_name: this.addSubserviceForm.subservice_name,
+            service_actual_id: this.selectedService.service_id,
+            base_rate: this.addSubserviceForm.base_rate,
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `${token}`
+            }
+          }
+        );
+        alert(response.data);
+        this.closeAddSubserviceModal();
+        this.fetchServices();
+      } catch (error) {
+        console.error(error);
+        alert(error.response.data);
+      }
+    },
+    async submitDeleteSubserviceForm() {
+      try {
+        const token = localStorage.getItem('admin_Token');
+        const response = await axios.post(
+          "http://127.0.0.1:5000/services/SubService",
+          {
+            action: "deleteService",
+            sub_name: this.deleteSubserviceForm.subservice_name,
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `${token}`
+            }
+          }
+        );
+        alert(response.data);
+        this.closeDeleteSubserviceModal();
+        this.fetchServices();
+      } catch (error) {
+        console.error(error);
+        alert(error.response.data);
+      }
+    },
+    async deleteService() {
+      try {
+        const token = localStorage.getItem('admin_Token');
+        const response = await axios.post(
+          "http://127.0.0.1:5000/services/createService",
+          {
+            action: "deleteService",
+            service_name: this.selectedService.service_info.service_name
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `${token}`
+            }
+          }
+        );
+        alert(response.data);
+        this.closeDeleteServiceModal();
+        this.fetchServices();
+      } catch (error) {
+        console.error(error);
+        alert(error.response.data);
+      }
+    },
   },
   created() {
     this.fetchServices();
@@ -288,7 +456,6 @@ export default {
   background-color: #2c3e50;
   border: 1px solid #4a6278;
   border-radius: 5px;
-  overflow: hidden;
   transition: box-shadow 0.3s;
   text-align: center;
 }
@@ -398,4 +565,93 @@ export default {
 .search-input {
   margin-right: 1em;
 }
+
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.button-group .btn {
+  flex: 1;
+  margin: 0 5px;
+}
+
+.subservices-section {
+  margin-top: 30px;
+}
+
+.subservices-section h2 {
+  color: white;
+  text-align: center;
+}
+
+.services-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.content-container {
+  overflow-x: auto; /* Enable horizontal scrolling */
+  display: flex;
+  padding: 10px;
+  gap: 10px;
+  white-space: nowrap; /* Prevents cards from wrapping */
+}
+
+.services-grid {
+  display: flex;
+  gap: 20px; /* Add spacing between cards */
+}
+
+
+button-group {
+  display: flex;
+  gap: 5px;
+}
+
+.no-services, .loading {
+  text-align: center;
+}
+
+/* Custom scrollbar */
+.content-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.content-container::-webkit-scrollbar-track {
+  background: #34495e;
+}
+
+.content-container::-webkit-scrollbar-thumb {
+  background: #2c3e50;
+  border-radius: 5px;
+}
+
+.content-container::-webkit-scrollbar-thumb:hover {
+  background: #4a6278;
+}
+
 </style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -17,13 +17,13 @@
       <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
         <ul class="navbar-nav">
           <li class="nav-item">
-            <router-link class="nav-link navbar-text" to="/ServiceDash/requests">Requests</router-link>
+            <router-link class="nav-link navbar-text" to="/Servicedash/requests">Requests</router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link navbar-text" to="/ServiceDash/history">History</router-link>
+            <router-link class="nav-link navbar-text" to="/Servicedash/history">History</router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link navbar-text" to="/ServiceDash/editProfile">Edit Profile</router-link>
+            <router-link class="nav-link navbar-text" to="/Servicedash/editProfile">Edit Profile</router-link>
           </li>
           <li class="nav-item">
             <router-link class="nav-link navbar-text" to="/" @click="deletelocal()">Logout</router-link>

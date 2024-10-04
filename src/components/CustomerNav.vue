@@ -27,7 +27,7 @@
             <router-link class="nav-link navbar-text" to="/Custdash/Summary">Summary</router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link navbar-text">Edit Profile</router-link>
+            <router-link class="nav-link navbar-text" to="/Custdash/editProf">Edit Profile</router-link>
           </li>
           <li class="nav-item">
             <router-link class="nav-link navbar-text" to="/" @click="deletelocal()">Logout</router-link>
@@ -54,13 +54,19 @@ export default {
     localStorage.removeItem('cust_name');
     localStorage.removeItem('cust_id');
     localStorage.removeItem('cust_Fullname');
+    localStorage.removeItem('cust_approval');
+
   }
   },  
   mounted() {
       const uname = localStorage.getItem('cust_Fullname');
       const uid = localStorage.getItem('cust_id');
+      const approval = localStorage.getItem('cust_approval');
       if (uname) {
         this.welcomeMessage = `Welcome ${uname}!      ID: ${uid}`;
+      }
+      if (approval != 1) {
+        this.welcomeMessage += "  Not Approved by Admin!";
       }
   }
 };

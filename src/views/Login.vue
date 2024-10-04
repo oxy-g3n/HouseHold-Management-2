@@ -69,8 +69,9 @@ export default {
           const user_id = response.data.user_id;
           const full_name = response.data.full_name;
           const pin_code = response.data.pin_code;
+          const approval = response.data.approval;
           const username = this.username;
-          console.log(response.data.role);
+          console.log(approval);
           if (response.data.role === 'customer') {
             setTimeout(() => {
               localStorage.setItem('cust_Token', token);
@@ -78,6 +79,8 @@ export default {
               localStorage.setItem('cust_id', user_id);
               localStorage.setItem('cust_Fullname', full_name);
               localStorage.setItem('cust_pin', pin_code);
+              localStorage.setItem('cust_approval', approval);
+
               this.$router.push('/Custdash');
             }, 1000);
           }

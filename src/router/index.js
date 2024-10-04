@@ -3,7 +3,7 @@ import { createRouter, createWebHashHistory } from "vue-router";
 import Login from "../views/Login.vue";
 import RegisterServiceman from "@/views/Serviceman/RegisterServiceman.vue";
 import RegisterCustomer from "@/views/Customer/RegisterCustomer.vue";
-import ServicemanNav from "@/components/ServicemanNav.vue";
+
 
 //Dashes
 import ServiceDash from "@/views/Serviceman/ServiceDash.vue";
@@ -14,20 +14,19 @@ import CustDash from "@/views/Customer/CustDash.vue";
 import MyServices from "@/views/Customer/MyServices.vue";
 import SearchServices from "@/views/Customer/SearchServices.vue";
 import Summary from "@/views/Customer/Summary.vue";
-import Servicemen from "@/views/Customer/Servicemen.vue";
+import custEditProf from "@/views/Customer/custEditProf.vue";
 
+//Servicemen
+import Requests from "@/views/Serviceman/Requests.vue";
+import History from "@/views/Serviceman/History.vue";
+import Editprof from "@/views/Serviceman/Editprof.vue";
 
 //Admin
 import AdminServices from "@/views/Admin/AdminServices.vue";
-import test from "@/views/Admin/test.vue";
-
+import allRequests from "@/views/Admin/allRequests.vue";
+import ApprovalCentre from "@/views/Admin/ApprovalCentre.vue";
 
 const routes = [
-  // {
-  //   path: "/",
-  //   name: "home",
-  //   component: HomeView,
-  // },
   {
     path: "/",
     name: "Login",
@@ -44,13 +43,28 @@ const routes = [
     component: RegisterCustomer,
   },
 
-
   //Serviceman Dashboard with navbar and child components
   {
-    path: "/Serviceman",
-    name: "ServicemanNav",
-    component: ServicemanNav,
-    children:[
+    path: "/ServiceDash",
+    name: "ServiceDash",
+    component: ServiceDash,
+    children:
+    [
+      {
+        path: 'history',
+        name: 'history',
+        component: History
+      },      
+      {
+        path: 'requests',
+        name: 'requests',
+        component: Requests
+      },      
+      {
+        path: 'editProfile',
+        name: 'editProfile',
+        component: Editprof
+      },
     ]
   },
 
@@ -74,17 +88,14 @@ const routes = [
       path: 'Summary',
       name: 'Summary',
       component: Summary
+    },
+    {
+      path: 'editProf',
+      name: 'editProf',
+      component: custEditProf
     }
   ]
 },
-  // {
-  //   path: "/Customer",
-  //   name: "CustomerNav",
-  //   component: CustomerNav,
-  //   children:[
-
-  //   ]
-  // },
   {
     path: "/adminDash",
     name: "adminDash",
@@ -96,16 +107,16 @@ const routes = [
         component: AdminServices
       },
       {
-        path: 'test',
-        name: 'test',
-        component: test
+        path: 'allRequests',
+        name: 'allRequests',
+        component: allRequests
       },
-      // {
-      //   path: 'Servicemen',
-      //   name: 'Servicemen',
-      //   component: viewServicemen
-      // },
-      
+      {
+        path: 'ApprovalCentre',
+        name: 'ApprovalCentre',
+        component: ApprovalCentre
+      },
+
     ]
   },
   // {
@@ -125,27 +136,3 @@ const router = createRouter({
 });
 
 export default router;
-
-
-// {
-//   path: '/Udashboard',
-//   name: 'Udashboard',
-//   component: Udash,
-//   children: [
-//     {
-//       path: 'my-books',
-//       name: 'mybooks',
-//       component: UmyBooks
-//     },
-//     {
-//       path: 'all-books',
-//       name: 'allbooks',
-//       component: UallBooks
-//     },
-//     {
-//       path: 'stats',
-//       name: 'stats',
-//       component: Ustats
-//     }
-//   ]
-// },

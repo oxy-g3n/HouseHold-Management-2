@@ -20,58 +20,75 @@
         <div v-if="processedServices.length" class="services-grid">
           <div
             v-for="service in processedServices"
-            :key="service.id"
+            :key="service.service_id"
             class="service-card"
+            @click="toggleSubservices(service.service_id)"
           >
             <div class="service-content">
-              <h1>{{ service.service_name }}</h1>
-              <p>{{ service.service_desc }}</p>
-              <p>Max Price: ${{ service.max_price }}</p>
-              <p>Created: {{ service.date_created }}</p>
+              <h1>{{ service.service_info.service_name }}</h1>
+              <p>{{ service.service_info.service_desc }}</p>
+              <!-- <p>Servicemen: {{ service.service_info.servicemen }}</p> -->
+              <p>Created: {{ service.service_info.date_created }}</p>
             </div>
-            <button @click="viewServicemen(service)" class="btn btn-primary m-2">
-              View Servicemen
-            </button>
           </div>
         </div>
         <div v-else-if="loading" class="loading">Loading services...</div>
         <div v-else class="no-services">No services available.</div>
       </div>
 
-      <!-- Updated Dynamic Table Container -->
-      <div class="table-container" v-if="selectedServiceName !== 'None'">
-        <h3>Servicemen for {{ selectedServiceName }}</h3>
-        <table class="servicemen-table" v-if="filteredServicemen.length">
+      <div v-if="selectedService" class="subservices-container">
+        <h3>Subservices for {{ selectedService.service_info.service_name }}</h3>
+        <table class="subservices-table">
           <thead>
             <tr>
-              <th>User ID</th>
-              <th>Full Name</th>
-              <th>Service</th>
-              <th>Rating</th>
-              <th>Commission</th>
-              <th>Experience</th>
-              <th>Pin Code</th>
+              <th>Subservice Name</th>
+              <th>Base Rate</th>
+              <th>View Servicemen</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="subservice in selectedService.subservices" :key="subservice.subservice_id">
+              <td>{{ subservice.subservice_name }}</td>
+              <td>${{ subservice.base_rate }}</td>
+              <td>
+                <button @click="viewServicemen(subservice)" class="btn btn-primary">
+                  View Servicemen
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div v-if="selectedSubservice" class="servicemen-container">
+        <h3>Servicemen for {{ selectedSubservice.subservice_name }}</h3>
+        <table class="servicemen-table" v-if="approvedServicemen.length">
+          <thead>
+            <tr>
+              <th @click="sortTable('user_id')">User ID <span :class="getSortClass('user_id')"></span></th>
+              <th @click="sortTable('full_name')">Full Name <span :class="getSortClass('full_name')"></span></th>
+              <th @click="sortTable('average_rating')">Average Rating <span :class="getSortClass('average_rating')"></span></th>
+              <th @click="sortTable('experience')">Experience <span :class="getSortClass('experience')"></span></th>
+              <th @click="sortTable('pin_code')">Pin Code <span :class="getSortClass('pin_code')"></span></th>
               <th>Request</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="person in filteredServicemen" :key="person.user_id">
+            <tr v-for="person in approvedServicemen" :key="person.user_id">
               <td>{{ person.user_id }}</td>
               <td>{{ person.full_name }}</td>
-              <td>{{ person.service }}</td>
-              <td>{{ person.Rating !== null ? person.Rating : 'N/A' }}</td>
-              <td>{{ person.commission !== null ? person.commission : 'N/A' }}</td>
+              <td>{{ person.average_rating !== null ? person.average_rating : 'N/A' }}</td>
               <td>{{ person.experience }} years</td>
               <td>{{ person.pin_code }}</td>
               <td>
-                <button @click="requestServiceman(person.user_id)" class="btn btn-secondary">
+                <button @click="requestServiceman(person.user_id, person.full_name)" class="btn btn-secondary">
                   Request
                 </button>
               </td>
             </tr>
           </tbody>
         </table>
-        <div v-else>No servicemen available for this service.</div>
+        <div v-else>No approved servicemen available for this subservice.</div>
       </div>
     </div>
   </div>
@@ -85,30 +102,36 @@ export default {
     return {
       rawServices: [],
       allServicemen: [],
-      selectedServiceName: "None",
+      selectedService: null,
+      selectedSubservice: null,
       loading: true,
       searchQuery: '',
+      sortKey: '',
+      sortAsc: true,
+      customerApproved: false,
     };
   },
   computed: {
     processedServices() {
-      return this.rawServices
-        .map((service, index) => ({
-          ...service,
-          id: index,
-        }))
-        .filter((service) => {
-          const searchLower = this.searchQuery.toLowerCase();
-          return (
-            service.service_name.toLowerCase().includes(searchLower) ||
-            service.service_desc.toLowerCase().includes(searchLower)
-          );
-        });
+      return this.rawServices.filter((service) => {
+        const searchLower = this.searchQuery.toLowerCase();
+        return (
+          service.service_info.service_name.toLowerCase().includes(searchLower) ||
+          service.service_info.service_desc.toLowerCase().includes(searchLower)
+        );
+      });
     },
-    filteredServicemen() {
-      return this.allServicemen.filter(serviceman => 
-        serviceman.service === this.selectedServiceName
-      );
+    approvedServicemen() {
+      return this.allServicemen
+        .filter(serviceman => 
+          serviceman.service === this.selectedSubservice.subservice_name && serviceman.approval == "1"
+        )
+        .sort((a, b) => {
+          const modifier = this.sortAsc ? 1 : -1;
+          if (a[this.sortKey] < b[this.sortKey]) return -1 * modifier;
+          if (a[this.sortKey] > b[this.sortKey]) return 1 * modifier;
+          return 0;
+        });
     },
   },
   methods: {
@@ -152,6 +175,7 @@ export default {
         );
         if (Array.isArray(response.data)) {
           this.allServicemen = response.data;
+          await this.fetchAverageRatings();
         } else {
           console.error("Unexpected data format:", response.data);
           this.allServicemen = [];
@@ -161,25 +185,65 @@ export default {
         this.allServicemen = [];
       }
     },
-    viewServicemen(service) {
-      console.log(`Viewing servicemen for: ${service.service_name}`);
-      this.selectedServiceName = service.service_name;
+    async fetchAverageRatings() {
+      try {
+        const token = localStorage.getItem("cust_Token");
+        const ratingPromises = this.allServicemen.map(async (serviceman) => {
+          try {
+            const response = await axios.get(
+              `http://127.0.0.1:5000/requests/averageRating/${serviceman.user_id}`,
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `${token}`
+                },
+              }
+            );
+            if (response.data && response.data.average_rating !== undefined) {
+              serviceman.average_rating = response.data.average_rating;
+            } else {
+              serviceman.average_rating = "No ratings available";
+            }
+          } catch (error) {
+            console.error(`Error fetching rating for serviceman ${serviceman.user_id}:`, error);
+            serviceman.average_rating = "Error";
+          }
+        });
+
+        await Promise.all(ratingPromises);
+      } catch (error) {
+        console.error("Error fetching average ratings:", error);
+      }
     },
-    
- async requestServiceman(userId) {
+    toggleSubservices(serviceId) {
+      this.selectedService = this.selectedService && this.selectedService.service_id === serviceId
+        ? null
+        : this.rawServices.find(service => service.service_id === serviceId);
+      this.selectedSubservice = null;
+    },
+    viewServicemen(subservice) {
+      this.selectedSubservice = subservice;
+    },
+    async requestServiceman(userId, serviceman_name) {
+      if (!this.customerApproved) {
+        alert("You are not approved to make service requests. Please contact support for assistance.");
+        return;
+      }
+
       try {
         const token = localStorage.getItem("cust_Token");
         const customerId = localStorage.getItem("cust_id");
         const customerName = localStorage.getItem("cust_Fullname");
         const customerAddress = localStorage.getItem("cust_pin");
-
         const requestData = {
           customer_id: customerId,
           serviceman_id: userId,
           status: "requested",
-          service: this.selectedServiceName,
+          service: this.selectedSubservice.subservice_name,
+          serviceman_Fullname: serviceman_name,
           cust_Fullname: customerName,
-          pin_code: customerAddress
+          pin_code: customerAddress,
+          subservice_id: this.selectedSubservice.subservice_id
         };
 
         const response = await axios.post(
@@ -203,10 +267,27 @@ export default {
         alert("An Error occurred while submitting the request!");
       }
     },
+    sortTable(key) {
+      if (this.sortKey === key) {
+        this.sortAsc = !this.sortAsc;
+      } else {
+        this.sortKey = key;
+        this.sortAsc = true;
+      }
+    },
+    getSortClass(key) {
+      if (this.sortKey === key) {
+        return this.sortAsc ? 'asc' : 'desc';
+      }
+      return '';
+    },
   },
   created() {
     this.fetchServices();
     this.fetchServicemen();
+    this.customerApproved = localStorage.getItem("cust_approval") == 1;
+    console.log(localStorage.getItem("cust_approval"));
+    console.log(this.customerApproved);
   },
 };
 </script>
@@ -313,6 +394,7 @@ export default {
 
 .servicemen-table th {
   background-color: #2c3e50;
+  cursor: pointer;
 }
 
 .servicemen-table td {
@@ -336,4 +418,55 @@ export default {
 .services-grid::-webkit-scrollbar-thumb:hover {
   background: #4a6278;
 }
+
+.asc::after {
+  content: ' ▲';
+}
+
+.desc::after {
+  content: ' ▼';
+}
+
+
+
+
+
+.subservices-container,
+.servicemen-container {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #2c3e50;
+  border-radius: 5px;
+}
+
+.subservices-table,
+.servicemen-table {
+  width: 100%;
+  background-color: #34495e;
+  border-radius: 5px;
+  border-collapse: collapse;
+  color: white;
+  margin-top: 10px;
+}
+
+.subservices-table th,
+.subservices-table td,
+.servicemen-table th,
+.servicemen-table td {
+  border: 1px solid #4a6278;
+  padding: 10px;
+  text-align: left;
+}
+
+.subservices-table th,
+.servicemen-table th {
+  background-color: #2c3e50;
+  cursor: pointer;
+}
+
+.subservices-table td,
+.servicemen-table td {
+  background-color: #34495e;
+}
+
 </style>

@@ -10,23 +10,19 @@
         data-bs-target="#navbarNav"
         aria-controls="navbarNav"
         aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
+        aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
         <ul class="navbar-nav">
           <li class="nav-item">
-            <router-link class="nav-link navbar-text" to="/adminDash/Services">Search</router-link>
+            <router-link class="nav-link navbar-text" to="/adminDash/Services">Services</router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link navbar-text" to="/adminDash/test">admin2</router-link>
+            <router-link class="nav-link navbar-text" to="/adminDash/allRequests">Stats</router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link navbar-text" to="/adminDash/Services">admin3</router-link>
-          </li>
-          <li class="nav-item">
-            <router-link class="nav-link navbar-text">Edit Profile</router-link>
+            <router-link class="nav-link navbar-text" to="/adminDash/ApprovalCentre">Approvals</router-link>
           </li>
           <li class="nav-item">
             <router-link class="nav-link navbar-text" to="/" @click="deletelocal()">Logout</router-link>
