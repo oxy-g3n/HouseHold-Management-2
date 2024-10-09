@@ -1,18 +1,19 @@
 <template>
   <div class="customer-requests-container">
     <h2>My Service Requests</h2>
-    <div v-if="loading" class="loading">Loading requests...</div>
-    <div v-else-if="requests.length === 0" class="no-requests">No pending requests available.</div>
+    <div v-if="loading" class="loading" aria-live="polite">Loading requests...</div>
+    <div v-else-if="requests.length === 0" class="no-requests" aria-live="polite">No pending requests available.</div>
     <div v-else class="table-container">
       <table class="requests-table">
         <thead>
           <tr>
-            <th>Request ID</th>
-            <th>Serviceman Name</th>
-            <th>Serviceman ID</th>
-            <th>Service</th>
-            <th>Status</th>
-            <th>Actions</th>
+            <th scope="col">Request ID</th>
+            <th scope="col">Serviceman Name</th>
+            <th scope="col">Serviceman ID</th>
+            <th scope="col">Service</th>
+            <th scope="col">Status</th>
+            <th scope="col">Request Date</th>
+            <th scope="col">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -22,11 +23,13 @@
             <td>{{ request.serviceman_id }}</td>
             <td>{{ request.service }}</td>
             <td>{{ request.status }}</td>
+            <td>{{ request.request_begin_date }}</td>
             <td>
               <button 
                 @click="withdrawRequest(request.serviceRequest_id)" 
                 class="btn btn-warning mr-2"
                 :disabled="request.status === 'active'"
+                :aria-label="'Withdraw request ' + request.serviceRequest_id"
               >
                 Withdraw
               </button>
@@ -34,6 +37,7 @@
                 @click="openCompletionModal(request.serviceRequest_id)" 
                 class="btn btn-success"
                 :disabled="request.status === 'requested'"
+                :aria-label="'Mark completed request ' + request.serviceRequest_id"
               >
                 Mark Completed
               </button>
@@ -44,11 +48,21 @@
     </div>
 
     <!-- Completion Modal -->
-    <div v-if="showCompletionModal" class="modal">
+    <div v-if="showCompletionModal" class="modal" aria-labelledby="modal-title" role="dialog">
       <div class="modal-content">
-        <h3>Rate the Service</h3>
+        <h3 id="modal-title">Rate the Service</h3>
         <p>Please rate the service from 1 to 10:</p>
-        <input v-model.number="rating" type="number" min="1" max="10" class="rating-input">
+        <label for="rating-input" class="sr-only">Rating</label>
+        <input 
+          v-model.number="rating" 
+          type="number" 
+          min="1" 
+          max="10" 
+          class="rating-input" 
+          id="rating-input"
+          aria-describedby="rating-description"
+        >
+        <p id="rating-description" class="sr-only">Enter a number between 1 and 10</p>
         <button @click="submitCompletion" class="btn btn-primary">Submit</button>
         <button @click="closeCompletionModal" class="btn btn-secondary">Cancel</button>
       </div>
@@ -89,7 +103,6 @@ export default {
         );
       } catch (error) {
         console.error("Error fetching service requests:", error);
-
       } finally {
         this.loading = false;
       }
@@ -141,6 +154,17 @@ export default {
       }
       this.updateRequest(this.selectedRequestId, "completed", this.rating);
       this.closeCompletionModal();
+    },
+    formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
     },
   },
   created() {
@@ -285,5 +309,17 @@ h2 {
   border-radius: 4px;
   background-color: #34495e;
   color: white;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 </style>

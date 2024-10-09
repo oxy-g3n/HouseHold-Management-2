@@ -1,14 +1,14 @@
 <template>
   <div class="customer-summary-container">
     <h2>Service Request Summary</h2>
-    <div v-if="loading" class="loading">Loading summary...</div>
-    <div v-else-if="requests.length === 0" class="no-requests">No service requests found.</div>
+    <div v-if="loading" class="loading" aria-live="polite">Loading summary...</div>
+    <div v-else-if="requests.length === 0" class="no-requests" aria-live="polite">No service requests found.</div>
     <div v-else>
       <!-- Charts -->
       <div class="charts-container">
         <div class="chart">
           <h3>Request Status</h3>
-          <canvas ref="statusChartRef" class="small-chart"></canvas> <!-- Applied small-chart class here -->
+          <canvas ref="statusChartRef" class="small-chart"></canvas>
         </div>
         <div class="chart">
           <h3>Most Requested Services</h3>
@@ -21,12 +21,14 @@
         <table class="requests-table">
           <thead>
             <tr>
-              <th @click="sortTable('serviceRequest_id')">Request ID <span :class="getSortClass('serviceRequest_id')"></span></th>
-              <th @click="sortTable('serviceman_name')">Serviceman Name <span :class="getSortClass('serviceman_name')"></span></th>
-              <th @click="sortTable('serviceman_id')">Serviceman ID <span :class="getSortClass('serviceman_id')"></span></th>
-              <th @click="sortTable('service')">Service <span :class="getSortClass('service')"></span></th>
-              <th @click="sortTable('status')">Status <span :class="getSortClass('status')"></span></th>
-              <th @click="sortTable('rating')">Rating <span :class="getSortClass('rating')"></span></th>
+              <th @click="sortTable('serviceRequest_id')" scope="col">Request ID <span :class="getSortClass('serviceRequest_id')"></span></th>
+              <th @click="sortTable('serviceman_name')" scope="col">Serviceman Name <span :class="getSortClass('serviceman_name')"></span></th>
+              <th @click="sortTable('serviceman_id')" scope="col">Serviceman ID <span :class="getSortClass('serviceman_id')"></span></th>
+              <th @click="sortTable('service')" scope="col">Service <span :class="getSortClass('service')"></span></th>
+              <th @click="sortTable('status')" scope="col">Status <span :class="getSortClass('status')"></span></th>
+              <th @click="sortTable('rating')" scope="col">Rating <span :class="getSortClass('rating')"></span></th>
+              <th @click="sortTable('request_begin_date')" scope="col">Start Date <span :class="getSortClass('request_begin_date')"></span></th>
+              <th @click="sortTable('request_end_date')" scope="col">End Date <span :class="getSortClass('request_end_date')"></span></th>
             </tr>
           </thead>
           <tbody>
@@ -37,6 +39,8 @@
               <td>{{ request.service }}</td>
               <td>{{ request.status }}</td>
               <td>{{ request.rating !== null ? request.rating : 'N/A' }}</td>
+              <td>{{ request.request_begin_date }}</td>
+              <td>{{ request.request_end_date }}</td>
             </tr>
           </tbody>
         </table>
@@ -64,6 +68,9 @@ export default {
     const sortedRequests = computed(() => {
       return [...requests.value].sort((a, b) => {
         const modifier = sortAsc.value ? 1 : -1;
+        if (sortKey.value === 'request_begin_date' || sortKey.value === 'request_end_date') {
+          return new Date(a[sortKey.value]) - new Date(b[sortKey.value]) * modifier;
+        }
         if (a[sortKey.value] < b[sortKey.value]) return -1 * modifier;
         if (a[sortKey.value] > b[sortKey.value]) return 1 * modifier;
         return 0;
@@ -106,6 +113,18 @@ export default {
         return sortAsc.value ? 'asc' : 'desc';
       }
       return '';
+    };
+
+    const formatDate = (dateString) => {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
     };
 
     const createCharts = () => {
@@ -225,6 +244,7 @@ export default {
       servicesChartRef,
       sortTable,
       getSortClass,
+      formatDate,
     };
   }
 };
@@ -264,10 +284,9 @@ h2, h3 {
   flex: 1;
 }
 
-/* Add styles for smaller pie chart */
 .small-chart {
-  width: 200px; /* Adjust width */
-  height: 200px; /* Adjust height */
+  width: 200px;
+  height: 200px;
 }
 
 .table-container {

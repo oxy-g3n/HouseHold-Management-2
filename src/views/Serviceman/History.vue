@@ -1,8 +1,8 @@
 <template>
   <div class="serviceman-history-container">
     <h2>Serviceman Service History</h2>
-    <div v-if="loading" class="loading">Loading history...</div>
-    <div v-else-if="requests.length === 0" class="no-requests">No service history available.</div>
+    <div v-if="loading" class="loading" aria-live="polite">Loading history...</div>
+    <div v-else-if="requests.length === 0" class="no-requests" aria-live="polite">No service history available.</div>
     <div v-else>
       <!-- Charts -->
       <div class="charts-container">
@@ -21,12 +21,14 @@
         <table class="requests-table">
           <thead>
             <tr>
-              <th @click="sortTable('serviceRequest_id')">Request ID <span :class="getSortClass('serviceRequest_id')"></span></th>
-              <th @click="sortTable('customer_name')">Customer Name <span :class="getSortClass('customer_name')"></span></th>
-              <th @click="sortTable('service')">Service <span :class="getSortClass('service')"></span></th>
-              <th @click="sortTable('customer_address')">Address <span :class="getSortClass('customer_address')"></span></th>
-              <th @click="sortTable('status')">Status <span :class="getSortClass('status')"></span></th>
-              <th @click="sortTable('rating')">Rating <span :class="getSortClass('rating')"></span></th>
+              <th @click="sortTable('serviceRequest_id')" scope="col">Request ID <span :class="getSortClass('serviceRequest_id')"></span></th>
+              <th @click="sortTable('customer_name')" scope="col">Customer Name <span :class="getSortClass('customer_name')"></span></th>
+              <th @click="sortTable('service')" scope="col">Service <span :class="getSortClass('service')"></span></th>
+              <th @click="sortTable('customer_address')" scope="col">Address <span :class="getSortClass('customer_address')"></span></th>
+              <th @click="sortTable('status')" scope="col">Status <span :class="getSortClass('status')"></span></th>
+              <th @click="sortTable('rating')" scope="col">Rating <span :class="getSortClass('rating')"></span></th>
+              <th @click="sortTable('request_begin_date')" scope="col">Start Date <span :class="getSortClass('request_begin_date')"></span></th>
+              <th @click="sortTable('request_end_date')" scope="col">End Date <span :class="getSortClass('request_end_date')"></span></th>
             </tr>
           </thead>
           <tbody>
@@ -37,6 +39,8 @@
               <td>{{ request.customer_address }}</td>
               <td>{{ request.status }}</td>
               <td>{{ request.rating !== null ? request.rating : 'N/A' }}</td>
+              <td>{{ request.request_begin_date }}</td>
+              <td>{{ request.request_end_date }}</td>
             </tr>
           </tbody>
         </table>
@@ -64,6 +68,13 @@ export default {
     const sortedRequests = computed(() => {
       return [...requests.value].sort((a, b) => {
         const modifier = sortAsc.value ? 1 : -1;
+        
+        if (sortKey.value === 'request_begin_date' || sortKey.value === 'request_end_date') {
+          const dateA = new Date(a[sortKey.value]);
+          const dateB = new Date(b[sortKey.value]);
+          return (dateA - dateB) * modifier;
+        }
+        
         if (a[sortKey.value] < b[sortKey.value]) return -1 * modifier;
         if (a[sortKey.value] > b[sortKey.value]) return 1 * modifier;
         return 0;
@@ -106,6 +117,18 @@ export default {
         return sortAsc.value ? 'asc' : 'desc';
       }
       return '';
+    };
+
+    const formatDate = (dateString) => {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
     };
 
     const createCharts = () => {
@@ -227,6 +250,7 @@ export default {
       ratingChartRef,
       sortTable,
       getSortClass,
+      formatDate,
     };
   }
 };

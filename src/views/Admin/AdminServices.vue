@@ -6,7 +6,7 @@
         <p>Service Management</p>
       </div>
       <div class="search-create-container">
-        <input type="text" class="form-control search-input" placeholder="Search" v-model="searchQuery">
+        <input type="text" class="form-control search-input" placeholder="Search Services or Subservices" v-model="searchQuery">
         <button type="button" class="btn btn-primary create-service-btn" @click="showCreateServiceModal = true">
           Create Service
         </button>
@@ -23,6 +23,7 @@
             <div class="button-group">
               <button @click="showAddSubserviceModal(service)" class="btn btn-success">Add Subservice</button>
               <button @click="showDeleteSubserviceModal(service)" class="btn btn-warning">Delete Subservice</button>
+              <button @click="showEditServiceModal(service)" class="btn btn-primary">Edit Service</button>
             </div>
             <button @click="toggleSubservices(service)" class="btn btn-info mt-2">
               Show Subservices
@@ -43,8 +44,10 @@
       <h2 v-if="!selectedService">No service selected</h2>
       <SubservicesTable
         v-else
-        :subservices="selectedService.subservices"
+        :subservices="filteredSubservices"
         :serviceName="selectedService.service_info.service_name"
+        :searchQuery="searchQuery"
+        @edit-subservice="showEditSubserviceModal"
       />
     </div>
 
@@ -190,8 +193,95 @@
         </div>
       </div>
     </div>
+
+        <!-- Edit Service Modal -->
+        <div v-if="showEditServiceModalbool" class="modal fade show d-block" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Edit Service</h5>
+            <button type="button" class="close" @click="closeEditServiceModal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="submitEditServiceForm">
+              <div class="form-group">
+                <label for="editServiceName">Service Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="editServiceName"
+                  v-model="editServiceForm.service_name"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="editServiceDescription">Service Description</label>
+                <textarea
+                  class="form-control"
+                  id="editServiceDescription"
+                  v-model="editServiceForm.service_description"
+                  rows="3"
+                  required
+                ></textarea>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @click="closeEditServiceModal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Submit</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Subservice Modal -->
+    <div v-if="showEditSubserviceModalbool" class="modal fade show d-block" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Edit Subservice</h5>
+            <button type="button" class="close" @click="closeEditSubserviceModal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="submitEditSubserviceForm">
+              <div class="form-group">
+                <label for="editSubserviceName">Subservice Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="editSubserviceName"
+                  v-model="editSubserviceForm.subservice_name"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="editBaseRate">Base Rate</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="editBaseRate"
+                  v-model.number="editSubserviceForm.base_rate"
+                  required
+                  min="0"
+                  step="1"
+                />
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @click="closeEditSubserviceModal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Submit</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
+
 
 <script>
 import axios from 'axios';
@@ -212,6 +302,8 @@ export default {
       selectedService: null,
       searchQuery: '',
       selectedService: null,
+      showEditServiceModalbool: false,
+      showEditSubserviceModalbool: false,
 
       createServiceForm: {
         service_name: "",
@@ -224,6 +316,17 @@ export default {
       deleteSubserviceForm: {
         subservice_name: "",
       },
+      editServiceForm: {
+        service_actual_id: null,
+        service_name: "",
+        service_description: "",
+      },
+      editSubserviceForm: {
+        subservice_id: null,
+        subservice_name: "",
+        subservice_previous_name: "",
+        base_rate: null,
+      },
     };
   },
   computed: {
@@ -233,8 +336,19 @@ export default {
         showSubservices: false
       })).filter(service => {
         const searchLower = this.searchQuery.toLowerCase();
-        return service.service_info.service_name.toLowerCase().includes(searchLower) || service.service_info.service_desc.toLowerCase().includes(searchLower);
+        return service.service_info.service_name.toLowerCase().includes(searchLower) ||
+               service.service_info.service_desc.toLowerCase().includes(searchLower) ||
+               service.subservices.some(subservice => 
+                 subservice.subservice_name.toLowerCase().includes(searchLower)
+               );
       });
+    },
+    filteredSubservices() {
+      if (!this.selectedService) return [];
+      const searchLower = this.searchQuery.toLowerCase();
+      return this.selectedService.subservices.filter(subservice =>
+        subservice.subservice_name.toLowerCase().includes(searchLower)
+      );
     }
   },
   methods: {
@@ -391,6 +505,81 @@ export default {
         alert(error.response.data);
       }
     },
+
+    showEditServiceModal(service) {
+      this.editServiceForm.service_actual_id = service.service_id;
+      this.editServiceForm.service_name = service.service_info.service_name;
+      this.editServiceForm.service_description = service.service_info.service_desc;
+      this.showEditServiceModalbool = true;
+    },
+    closeEditServiceModal() {
+      this.showEditServiceModalbool = false;
+      this.editServiceForm = { service_actual_id: null, service_name: "", service_description: "" };
+    },
+    showEditSubserviceModal(subservice) {
+      this.editSubserviceForm.subservice_id = subservice.subservice_id;
+      this.editSubserviceForm.subservice_name = subservice.subservice_name;
+      this.editSubserviceForm.subservice_previous_name = subservice.subservice_name;
+      this.editSubserviceForm.base_rate = subservice.base_rate;
+      this.showEditSubserviceModalbool = true;
+    },
+    closeEditSubserviceModal() {
+      this.showEditSubserviceModalbool = false;
+      this.editSubserviceForm = { subservice_id: null, subservice_name: "", subservice_previous_name: "", base_rate: null };
+    },
+    async submitEditServiceForm() {
+      try {
+        const token = localStorage.getItem('admin_Token');
+        const response = await axios.put("http://127.0.0.1:5000/services/EditService",
+          {
+            action: "service",
+            service_actual_id: this.editServiceForm.service_actual_id,
+            service_name: this.editServiceForm.service_name,
+            service_description: this.editServiceForm.service_description,
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `${token}`
+            }
+          }
+        );
+        alert(response.data);
+        this.closeEditServiceModal();
+        this.fetchServices();
+      } catch (error) {
+        console.error(error);
+        alert(error.response.data);
+      }
+    },
+    async submitEditSubserviceForm() {
+      try {
+        const token = localStorage.getItem('admin_Token');
+        const response = await axios.put("http://127.0.0.1:5000/services/EditService",
+          {
+            action: "subservice",
+            subservice_id: this.editSubserviceForm.subservice_id,
+            subservice_name: this.editSubserviceForm.subservice_name,
+            subservice_previous_name: this.editSubserviceForm.subservice_previous_name,
+            base_rate: this.editSubserviceForm.base_rate,
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `${token}`
+            }
+          }
+        );
+        alert(response.data);
+        this.closeEditSubserviceModal();
+        this.fetchServices();
+      } catch (error) {
+        console.error(error);
+        alert(error.response.data);
+      }
+    },
+  
+
   },
   created() {
     this.fetchServices();
