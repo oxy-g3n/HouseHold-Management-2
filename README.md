@@ -1,4 +1,4 @@
-# begin2-login-reg
+# Household Services Management, built for a freelance client
 
 ## Project setup
 ```
