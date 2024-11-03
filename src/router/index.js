@@ -7,7 +7,7 @@ import RegisterCustomer from "@/views/Customer/RegisterCustomer.vue";
 
 //Dashes
 import ServiceDash from "@/views/Serviceman/ServiceDash.vue";
-import AdminDash from "@/views/Admin/AdminDash.vue";
+import AdminDash from "@/views/Admin/AdministratorDashboard.vue";
 import CustDash from "@/views/Customer/CustDash.vue";
 
 //Customer
@@ -22,9 +22,9 @@ import History from "@/views/Serviceman/History.vue";
 import Editprof from "@/views/Serviceman/Editprof.vue";
 
 //Admin
-import AdminServices from "@/views/Admin/AdminServices.vue";
-import allRequests from "@/views/Admin/allRequests.vue";
-import ApprovalCentre from "@/views/Admin/ApprovalCentre.vue";
+import AdminServices from "@/views/Admin/AdministratorServices.vue";
+import allRequests from "@/views/Admin/AdministratorStaticstics.vue";
+import ApprovalCentre from "@/views/Admin/AdministratorApprovalCentre.vue";
 
 const routes = [
   {
