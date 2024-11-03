@@ -1,59 +1,146 @@
 <template>
-  <div class="vh-100 d-flex justify-content-center align-items-center page-colour">
-    <div v-if="isLoading" class="text-white">Loading...</div>
+  <div class="profile-portal min-vh-100 d-flex align-items-center justify-content-center py-5">
+    <div class="profile-container">
+      <!-- Loading State -->
+      <div v-if="isLoading" class="text-center">
+        <div class="spinner-border text-light" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
 
-    <div v-else class="container">
-      <div class="row">
-        <div class="col-md-10 mx-auto">
-          <h2 class="text-center text-white mb-4">Update Customer Profile</h2>
-          <form @submit.prevent="updateProfile" class="form-container border p-4 border-primary rounded">
-            <div class="row">
+      <!-- Profile Form -->
+      <div v-else class="profile-card bg-white rounded-4 shadow-lg overflow-hidden">
+        <header class="profile-header text-center p-4">
+          <span class="profile-icon display-4">👤</span>
+          <h2 class="profile-title mt-2 text-white mb-0">Personal Information</h2>
+        </header>
+
+        <main class="profile-content p-4">
+          <form @submit.prevent="submitProfileUpdate" class="profile-form">
+            <div class="row g-4">
+              <!-- Security Section -->
               <div class="col-md-6">
-                <div class="form-group mb-3">
-                  <label for="password">New Password (leave blank to keep current):</label>
-                  <input type="password" id="password" v-model="password" class="form-control">
-                </div>
-                <div class="form-group mb-3">
-                  <label for="email">Email:</label>
-                  <input type="email" id="email" v-model="mail" class="form-control">
-                </div>
-                <div class="form-group mb-3">
-                  <label for="mobile">Mobile:</label>
-                  <input type="text" id="mobile" v-model="mobile" class="form-control">
+                <div class="profile-section">
+                  <h3 class="section-title h5 mb-4">Security Details</h3>
+                  
+                  <div class="form-floating mb-3">
+                    <input
+                      type="password"
+                      class="form-control"
+                      id="securityPassword"
+                      v-model="formData.password"
+                      placeholder="Leave blank to keep current"
+                    >
+                    <label for="securityPassword">New Password</label>
+                  </div>
+
+                  <div class="form-floating mb-3">
+                    <input
+                      type="email"
+                      class="form-control"
+                      id="securityEmail"
+                      v-model="formData.mail"
+                      placeholder="Email address"
+                      required
+                    >
+                    <label for="securityEmail">Email Address</label>
+                  </div>
+
+                  <div class="form-floating">
+                    <input
+                      type="tel"
+                      class="form-control"
+                      id="securityMobile"
+                      v-model="formData.mobile"
+                      placeholder="Mobile number"
+                      required
+                    >
+                    <label for="securityMobile">Mobile Number</label>
+                  </div>
                 </div>
               </div>
+
+              <!-- Personal Section -->
               <div class="col-md-6">
-                <div class="form-group mb-3">
-                  <label for="fullName">Full Name:</label>
-                  <input type="text" id="fullName" v-model="fullName" class="form-control">
-                </div>
-                <div class="form-group mb-3">
-                  <label for="address">Address:</label>
-                  <input type="text" id="address" v-model="address" class="form-control">
-                </div>
-                <div class="form-group mb-3">
-                  <label for="pinCode">Pin Code:</label>
-                  <input type="text" id="pinCode" v-model="pinCode" class="form-control">
+                <div class="profile-section">
+                  <h3 class="section-title h5 mb-4">Personal Details</h3>
+
+                  <div class="form-floating mb-3">
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="personalName"
+                      v-model="formData.full_name"
+                      placeholder="Full name"
+                      required
+                    >
+                    <label for="personalName">Full Name</label>
+                  </div>
+
+                  <div class="form-floating mb-3">
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="personalAddress"
+                      v-model="formData.address"
+                      placeholder="Address"
+                      required
+                    >
+                    <label for="personalAddress">Address</label>
+                  </div>
+
+                  <div class="form-floating">
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="personalPincode"
+                      v-model="formData.pin_code"
+                      placeholder="PIN code"
+                      required
+                    >
+                    <label for="personalPincode">PIN Code</label>
+                  </div>
                 </div>
               </div>
             </div>
-            <div class="row mt-3">
-              <div class="col-md-6 mb-3">
-                <button type="submit" class="btn btn-primary btn-block">Update Profile</button>
-              </div>
-              <div class="col-md-6">
-                <button type="button" class="btn btn-secondary btn-block" @click="cancel">Cancel</button>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons mt-4">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <button type="submit" class="btn submit-btn w-100">
+                    Save Changes
+                  </button>
+                </div>
+                <div class="col-md-6">
+                  <button type="button" class="btn cancel-btn w-100" @click="handleCancel">
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
           </form>
-          <div v-if="alertMessage" class="alert-overlay d-flex justify-content-center align-items-center">
-            <div class="alert" :class="alertClass" role="alert">
-              {{ alertMessage }}
-              <button type="button" class="btn-close" @click="alertMessage = ''" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-          </div>
+        </main>
+      </div>
+
+      <!-- Notification -->
+      <div 
+        v-if="notification.message" 
+        class="notification-overlay"
+        @click="closeNotification"
+      >
+        <div 
+          class="notification-panel"
+          :class="notification.type"
+          @click.stop
+        >
+          {{ notification.message }}
+          <button 
+            type="button" 
+            class="btn-close notification-close" 
+            @click="closeNotification"
+            aria-label="Close alert"
+          ></button>
         </div>
       </div>
     </div>
@@ -61,163 +148,263 @@
 </template>
 
 <script>
-import axios from 'axios';
-import { useRouter } from 'vue-router';
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 export default {
-  data() {
-    return {
+  name: 'ProfileManager',
+
+  setup() {
+    const router = useRouter()
+    const isLoading = ref(true)
+    
+    const formData = reactive({
       password: '',
       mail: '',
       mobile: '',
-      fullName: '',
+      full_name: '',
       address: '',
-      pinCode: '',
-      alertMessage: '',
-      alertClass: '',
-      isLoading: true,
-    };
-  },
-  setup() {
-    const router = useRouter();
-    return { router };
-  },
-  methods: {
-    async fetchUserData() {
-      try {
-        const customerId = localStorage.getItem('cust_id');
-        const response = await axios.get(`http://127.0.0.1:5000/users/getCustomer/${customerId}`, {
-          headers: {
-            'Authorization': `${localStorage.getItem('cust_Token')}`,
-          },
-        });
-        const customerData = response.data;
-        console.log("bruh");
-        console.log(customerData);
-        // Populate form fields with fetched data
-        this.mail = customerData[0].mail;
-        this.mobile = customerData[0].mobile;
-        this.fullName = customerData[0].full_name;
-        this.address = customerData[0].address;
-        this.pinCode = customerData[0].pin_code;
+      pin_code: ''
+    })
 
-        console.log('Fetched customer data:', customerData); // For debugging
-      } catch (error) {
-        console.error("Error fetching customer data:", error);
-        this.showAlert("Unable to fetch customer data", "alert-danger");
-      } finally {
-        this.isLoading = false;
-      }
-    },
+    const notification = reactive({
+      message: '',
+      type: ''
+    })
 
-    async updateProfile() {
-      const formData = new FormData();
-      if (this.password) formData.append('password', this.password);
-      formData.append('mail', this.mail);
-      formData.append('mobile', this.mobile);
-      formData.append('full_name', this.fullName);
-      formData.append('address', this.address);
-      formData.append('pin_code', this.pinCode);
-
-      try {
-        const response = await axios.put('http://127.0.0.1:5000/users/update_profile', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `${localStorage.getItem('cust_Token')}`
-          },
-        });
-        this.showAlert(response.data.message, 'alert-success');
-      } catch (error) {
-        console.error('Update error:', error);
-        this.showAlert('An error occurred during profile update', 'alert-danger');
-      }
-    },
-    cancel() {
-      this.router.push('/Custdash/SearchServices');
-    },
-    showAlert(message, alertClass) {
-      this.alertMessage = message;
-      this.alertClass = `alert ${alertClass} alert-dismissible fade show`;
+    const displayNotification = (message, type = 'success') => {
+      notification.message = message
+      notification.type = `notification-${type}`
       setTimeout(() => {
-        this.alertMessage = '';
-      }, 5000);
-    },
+        closeNotification()
+      }, 5000)
+    }
+
+    const closeNotification = () => {
+      notification.message = ''
+      notification.type = ''
+    }
+
+    const retrieveProfileData = async () => {
+      try {
+        const customerId = localStorage.getItem('cust_id')
+        const token = localStorage.getItem('cust_Token')
+        
+        const response = await axios.get(
+          `http://127.0.0.1:5000/users/getCustomer/${customerId}`,
+          {
+            headers: { Authorization: token }
+          }
+        )
+
+        const [userData] = response.data
+        
+        Object.assign(formData, {
+          mail: userData.mail,
+          mobile: userData.mobile,
+          full_name: userData.full_name,
+          address: userData.address,
+          pin_code: userData.pin_code
+        })
+      } catch (error) {
+        console.error('Profile fetch failed:', error)
+        displayNotification('Unable to load profile data', 'error')
+      } finally {
+        isLoading.value = false
+      }
+    }
+
+    const submitProfileUpdate = async () => {
+      const submitData = new FormData()
+      
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === 'password' && !value) return
+        submitData.append(key === 'fullName' ? 'full_name' : key, value)
+      })
+
+      try {
+        const response = await axios.put(
+          'http://127.0.0.1:5000/users/update_profile',
+          submitData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              Authorization: localStorage.getItem('cust_Token')
+            }
+          }
+        )
+        displayNotification(response.data.message)
+      } catch (error) {
+        console.error('Profile update failed:', error)
+        displayNotification('Profile update failed', 'error')
+      }
+    }
+
+    const handleCancel = () => {
+      router.push('/Custdash/SearchServices')
+    }
+
+    return {
+      isLoading,
+      formData,
+      notification,
+      submitProfileUpdate,
+      handleCancel,
+      closeNotification,
+      retrieveProfileData
+    }
   },
+
   mounted() {
-    this.fetchUserData();
+    this.retrieveProfileData()
   }
-};
+}
 </script>
 
 <style scoped>
-.vh-100 {
-  height: 100vh;
+.profile-portal {
+  background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
 }
 
-.d-flex {
-  display: flex;
-}
-
-.justify-content-center {
-  justify-content: center;
-}
-
-.align-items-center {
-  align-items: center;
-}
-
-.container {
-  max-width: auto;
-  padding: 20px;
-}
-
-.form-container {
-  background-color: #2c3e50;
-  color: white;
-}
-
-.border {
-  border: 1px solid #007bff;
-}
-
-.p-4 {
-  padding: 1.5rem !important;
-}
-
-.mb-3 {
-  margin-bottom: 1rem !important;
-}
-
-.btn-block {
-  display: block;
+.profile-container {
   width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem;
 }
 
-.mx-auto {
-  margin-left: auto !important;
-  margin-right: auto !important;
+.profile-card {
+  background-color: #ffffff;
 }
 
-.text-center {
-  text-align: center !important;
+.profile-header {
+  background: linear-gradient(45deg, #303f9f, #1976d2);
 }
 
-.page-colour {  
-  background-color:#1e2a3a;
+.profile-title {
+  font-weight: 300;
+  font-size: 1.75rem;
+  color: #ffffff; /* Keeping this white for contrast on the header */
 }
 
-.alert-overlay {
+.profile-icon {
+  color: #ffffff; /* Keeping this white for contrast on the header */
+}
+
+.section-title {
+  color: #000000;
+  font-weight: 500;
+}
+
+.form-floating > label {
+  color: #00000000;
+}
+
+.form-floating > .form-control {
+  color: #000000;
+}
+
+.form-floating > .form-control:focus {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 0.25rem rgba(25, 118, 210, 0.25);
+  color: #000000;
+}
+
+.form-floating > .form-control::placeholder {
+  color: #666666;
+}
+
+.submit-btn {
+  background: linear-gradient(45deg, #303f9f, #1976d2);
+  color: white; /* Keeping this white for contrast on the button */
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: transform 0.2s;
+}
+
+.submit-btn:hover {
+  color: white; /* Keeping this white for contrast on the button */
+  transform: translateY(-1px);
+}
+
+.cancel-btn {
+  background: #f5f5f5;
+  color: #000000;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: transform 0.2s;
+}
+
+.cancel-btn:hover {
+  background: #e0e0e0;
+  transform: translateY(-1px);
+  color: #000000;
+}
+
+.notification-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 1050;
 }
 
-.btn-close {
-  background: none;
-  border: none;
+.notification-panel {
+  position: relative;
+  background: white;
+  padding: 1rem 3rem 1rem 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 90%;
+  width: 400px;
+  color: #000000;
+}
+
+.notification-close {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  color: #000000;
+}
+
+.notification-success { 
+  border-left: 4px solid #2e7d32; 
+  color: #000000;
+}
+
+.notification-error { 
+  border-left: 4px solid #c62828; 
+  color: #000000;
+}
+
+/* Input specific styles */
+input.form-control {
+  color: #000000 !important;
+}
+
+input.form-control:focus {
+  color: #000000;
+}
+
+/* Loading spinner color override */
+.spinner-border.text-light {
+  color: #ffffff !important; /* Keeping this white for visibility on the dark background */
+}
+
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 0.5rem;
+  }
+
+  .profile-title {
+    font-size: 1.5rem;
+  }
 }
 </style>

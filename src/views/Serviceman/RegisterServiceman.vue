@@ -1,271 +1,510 @@
 <template>
-  <div class="vh-100 d-flex justify-content-center align-items-center page-colour">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-10 mx-auto">
-          <h2 class="text-center text-white mb-4">Serviceman Registration</h2>
-          <form @submit.prevent="registerUser" class="form-container border p-4 border-primary rounded">
-            <div class="row">
+  <div class="professional-portal d-flex align-items-center justify-content-center min-vh-100">
+    <div class="registration-wrapper mx-auto p-4">
+      <div class="content-card bg-white rounded-4 shadow">
+        <header class="registration-header text-center p-4 rounded-top-4">
+          <span class="header-icon fs-1">🛠️</span>
+          <h1 class="welcome-text mt-3 text-white fw-light">Professional Registration</h1>
+        </header>
+
+        <div class="registration-body p-4">
+          <form @submit.prevent="processRegistration" class="needs-validation">
+            <div class="row g-4">
+              <!-- Personal Information Section -->
               <div class="col-md-6">
-                <div class="form-group mb-3">
-                  <label for="username">Username:</label>
-                  <input type="text" id="username" v-model="username" class="form-control" maxlength="30" required>
-                </div>
-                <div class="form-group mb-3">
-                  <label for="password">Password:</label>
-                  <input type="password" id="password" v-model="password" class="form-control" minlength="8" required>
-                </div>
-                <div class="form-group mb-3">
-                  <label for="email">Email:</label>
-                  <input type="email" id="email" v-model="mail" class="form-control" required>
-                </div>
-                <div class="form-group mb-3">
-                  <label for="mobile">Mobile:</label>
-                  <input type="text" id="mobile" v-model="mobile" class="form-control" required>
-                </div>
-                <div class="form-group mb-3">
-                  <label for="fullName">Full Name:</label>
-                  <input type="text" id="fullName" v-model="fullName" class="form-control" maxlength="60" required>
-                </div>
-                <div class="form-group mb-3">
-                  <label for="address">Address:</label>
-                  <textarea id="address" v-model="address" class="form-control" maxlength="500" required></textarea>
+                <div class="input-wrapper">
+                  <input 
+                    type="text"
+                    id="professionalId"
+                    v-model="registrationDetails.professionalId"
+                    class="custom-input form-control"
+                    required
+                    maxlength="30"
+                  >
+                  <label for="professionalId">Professional Username</label>
                 </div>
               </div>
+
               <div class="col-md-6">
-                <div class="form-group mb-3">
-                  <label for="pinCode">Pin Code:</label>
-                  <input type="text" id="pinCode" v-model="pinCode" class="form-control" maxlength="6" pattern="[0-9]*" required>
+                <div class="input-wrapper">
+                  <input 
+                    type="text"
+                    id="professionalName"
+                    v-model="registrationDetails.professionalName"
+                    class="custom-input form-control"
+                    required
+                    maxlength="60"
+                  >
+                  <label for="professionalName">Full Name</label>
                 </div>
-                <div class="form-group mb-3">
-                  <label for="service">Service:</label>
-                  <select id="service" v-model="selectedService" @change="updateSubservices" class="form-control" required>
-                    <option value="">Select a service</option>
-                    <option v-for="service in availableServices" :key="service.service_id" :value="service">
-                      {{ service.service_info.service_name }}
+              </div>
+
+              <div class="col-md-6">
+                <div class="input-wrapper">
+                  <input 
+                    type="password"
+                    id="securityKey"
+                    v-model="registrationDetails.securityKey"
+                    class="custom-input form-control"
+                    required
+                    minlength="8"
+                  >
+                  <label for="securityKey">Security Password</label>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="input-wrapper">
+                  <input 
+                    type="email"
+                    id="emailContact"
+                    v-model="registrationDetails.emailContact"
+                    class="custom-input form-control"
+                    required
+                  >
+                  <label for="emailContact">Email Address</label>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="input-wrapper">
+                  <input 
+                    type="tel"
+                    id="phoneContact"
+                    v-model="registrationDetails.phoneContact"
+                    class="custom-input form-control"
+                    required
+                  >
+                  <label for="phoneContact">Contact Number</label>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="input-wrapper">
+                  <input 
+                    type="text"
+                    id="areaCode"
+                    v-model="registrationDetails.areaCode"
+                    class="custom-input form-control"
+                    required
+                    pattern="[0-9]*"
+                    maxlength="6"
+                  >
+                  <label for="areaCode">Area Code</label>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <div class="input-wrapper">
+                  <textarea 
+                    id="locationDetails"
+                    v-model="registrationDetails.locationDetails"
+                    class="custom-input form-control"
+                    required
+                    maxlength="500"
+                    rows="3"
+                  ></textarea>
+                  <label for="locationDetails">Complete Address</label>
+                </div>
+              </div>
+
+              <!-- Professional Details Section -->
+              <div class="col-md-6">
+                <div class="input-wrapper">
+                  <select 
+                    id="expertiseArea"
+                    v-model="registrationDetails.selectedExpertise"
+                    class="custom-input form-control"
+                    @change="updateSpecializations"
+                    required
+                  >
+                    <option value="">Choose Expertise Area</option>
+                    <option 
+                      v-for="expertise in expertiseAreas" 
+                      :key="expertise.service_id"
+                      :value="expertise"
+                    >
+                      {{ expertise.service_info.service_name }}
                     </option>
                   </select>
+                  <label for="expertiseArea">Expertise Area</label>
                 </div>
-                <div class="form-group mb-3" v-if="subservices.length > 0">
-                  <label for="subservice">Subservice:</label>
-                  <select id="subservice" v-model="selectedSubservice" class="form-control" required>
-                    <option value="">Select a subservice</option>
-                    <option v-for="subservice in subservices" :key="subservice.subservice_id" :value="subservice">
-                      {{ subservice.subservice_name }}
+              </div>
+
+              <div class="col-md-6" v-if="specializations.length">
+                <div class="input-wrapper">
+                  <select 
+                    id="specialization"
+                    v-model="registrationDetails.selectedSpecialization"
+                    class="custom-input form-control"
+                    required
+                  >
+                    <option value="">Select Specialization</option>
+                    <option 
+                      v-for="specialization in specializations"
+                      :key="specialization.subservice_id"
+                      :value="specialization"
+                    >
+                      {{ specialization.subservice_name }}
                     </option>
                   </select>
+                  <label for="specialization">Specialization</label>
                 </div>
-                <div class="form-group mb-3">
-                  <label for="experience">Experience (in years):</label>
-                  <input type="number" id="experience" v-model="experience" class="form-control" min="0" required>
+              </div>
+
+              <div class="col-md-6">
+                <div class="input-wrapper">
+                  <input 
+                    type="number"
+                    id="expertiseYears"
+                    v-model="registrationDetails.expertiseYears"
+                    class="custom-input form-control"
+                    required
+                    min="0"
+                  >
+                  <label for="expertiseYears">Years of Expertise</label>
                 </div>
-                <div class="form-group mb-3">
-                  <label for="portfolio">Portfolio:</label>
-                  <input type="file" id="portfolio" @change="handleFileUpload" class="form-control" required>
+              </div>
+
+              <div class="col-md-6">
+                <div class="input-wrapper">
+                  <input 
+                    type="file"
+                    id="workPortfolio"
+                    @change="handlePortfolioUpload"
+                    class="custom-input form-control"
+                    required
+                  >
+                  <label for="workPortfolio">Work Portfolio</label>
                 </div>
               </div>
             </div>
-            <div class="row mt-3">
-              <div class="col-md-6 mb-3">
-                <button type="submit" class="btn btn-primary btn-block" :disabled="!isFormValid">Register</button>
-              </div>
-              <div class="col-md-6">
-                <button type="button" class="btn btn-secondary btn-block" @click="cancel">Cancel</button>
+
+            <div class="action-section mt-4">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <button 
+                    type="submit" 
+                    class="action-button submit-button w-100"
+                    :disabled="!isFormComplete"
+                  >
+                    Complete Registration
+                  </button>
+                </div>
+                <div class="col-md-6">
+                  <button 
+                    type="button" 
+                    class="action-button cancel-button w-100"
+                    @click="navigateHome"
+                  >
+                    Return to Home
+                  </button>
+                </div>
               </div>
             </div>
           </form>
-          <div v-if="alertMessage" class="alert-overlay d-flex justify-content-center align-items-center">
-            <div class="alert" :class="alertClass" role="alert">
-              {{ alertMessage }}
-              <button type="button" class="btn-close" @click="alertMessage = ''" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-          </div>
         </div>
+      </div>
+    </div>
+
+    <div 
+      v-if="notificationDetails.message" 
+      class="notification-overlay"
+      @click="clearNotification"
+    >
+      <div 
+        class="notification-content"
+        :class="notificationDetails.type"
+        @click.stop
+      >
+        {{ notificationDetails.message }}
+        <button 
+          class="notification-close btn-close"
+          @click="clearNotification"
+        ></button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
-import { useRouter } from 'vue-router';
+import { reactive, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 export default {
-  data() {
-    return {
-      username: '',
-      password: '',
-      mail: '',
-      mobile: '',
-      fullName: '',
-      address: '',
-      pinCode: '',
-      selectedService: null,
-      selectedSubservice: null,
-      experience: '',
-      portfolioFile: null,
-      alertMessage: '',
-      alertClass: '',
-      availableServices: [],
-      subservices: [],
-    };
-  },
+  name: 'ProfessionalRegistration',
+  
   setup() {
-    const router = useRouter();
-    return { router };
-  },
-  computed: {
-    isFormValid() {
-      return this.username && this.password && this.mail && this.mobile && this.fullName && 
-             this.address && this.pinCode && this.selectedService && this.selectedSubservice && 
-             this.experience && this.portfolioFile;
+    const router = useRouter()
+    
+    const registrationDetails = reactive({
+      professionalId: '',
+      securityKey: '',
+      emailContact: '',
+      phoneContact: '',
+      professionalName: '',
+      locationDetails: '',
+      areaCode: '',
+      selectedExpertise: null,
+      selectedSpecialization: null,
+      expertiseYears: '',
+      portfolioDocument: null
+    })
+
+    const notificationDetails = reactive({
+      message: '',
+      type: ''
+    })
+
+    const expertiseAreas = reactive([])
+    const specializations = reactive([])
+
+    const showNotification = (message, category) => {
+      notificationDetails.message = message
+      notificationDetails.type = `notification-${category}`
+      setTimeout(clearNotification, 5000)
     }
-  },
-  methods: {
-    handleFileUpload(event) {
-      this.portfolioFile = event.target.files[0];
-    },
-    async registerUser() {
-      if (!this.isFormValid) {
-        this.showAlert('Please fill in all required fields', 'alert-danger');
-        return;
+
+    const clearNotification = () => {
+      notificationDetails.message = ''
+      notificationDetails.type = ''
+    }
+
+    const handlePortfolioUpload = (event) => {
+      registrationDetails.portfolioDocument = event.target.files[0]
+    }
+
+    const isFormComplete = computed(() => {
+      return registrationDetails.professionalId && registrationDetails.securityKey && 
+             registrationDetails.emailContact && registrationDetails.phoneContact && 
+             registrationDetails.professionalName && registrationDetails.locationDetails && 
+             registrationDetails.areaCode && registrationDetails.selectedExpertise && 
+             registrationDetails.selectedSpecialization && registrationDetails.expertiseYears && 
+             registrationDetails.portfolioDocument
+    })
+
+    const processRegistration = async () => {
+      if (!isFormComplete.value) {
+        showNotification('Please complete all required fields', 'error')
+        return
       }
 
-      const formData = new FormData();
-      formData.append('action', 'service_reg');
-      formData.append('username', this.username);
-      formData.append('password', this.password);
-      formData.append('mail', this.mail);
-      formData.append('mobile', this.mobile);
-      formData.append('full_name', this.fullName);
-      formData.append('address', this.address);
-      formData.append('pin_code', this.pinCode);
-      formData.append('service', this.selectedService.service_info.service_name);
-      formData.append('subservice', this.selectedSubservice.subservice_name);
-      formData.append('experience', this.experience);
-      formData.append('portfolio', this.portfolioFile);
-      
-      try {
-        const response = await axios.post('http://127.0.0.1:5000/users/register', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-        this.showAlert(response.data, 'alert-success');
-        
-        setTimeout(() => {
-          this.$router.push('/');
-        }, 2000);  // 2000 milliseconds = 2 seconds
+      const formPayload = new FormData()
+      formPayload.append('action', 'service_reg')
+      formPayload.append('username', registrationDetails.professionalId)
+      formPayload.append('password', registrationDetails.securityKey)
+      formPayload.append('mail', registrationDetails.emailContact)
+      formPayload.append('mobile', registrationDetails.phoneContact)
+      formPayload.append('full_name', registrationDetails.professionalName)
+      formPayload.append('address', registrationDetails.locationDetails)
+      formPayload.append('pin_code', registrationDetails.areaCode)
+      formPayload.append('service', registrationDetails.selectedExpertise.service_info.service_name)
+      formPayload.append('subservice', registrationDetails.selectedSpecialization.subservice_name)
+      formPayload.append('experience', registrationDetails.expertiseYears)
+      formPayload.append('portfolio', registrationDetails.portfolioDocument)
 
-      } catch (error) {
-        console.error('Registration error:', error);
-        this.showAlert('An error occurred during registration', 'alert-danger');
-      }
-    },
-    cancel() {
-      this.$router.push('/');
-    },
-    showAlert(message, alertClass) {
-      this.alertMessage = message;
-      this.alertClass = `alert ${alertClass} alert-dismissible fade show`;
-      setTimeout(() => {
-        this.alertMessage = '';
-      }, 5000);
-    },
-    async fetchAvailableServices() {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/services/listServices');
-        this.availableServices = response.data;
+        const response = await axios.post('http://127.0.0.1:5000/users/register', formPayload, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        showNotification(response.data, 'success')
+        setTimeout(() => router.push('/'), 2000)
       } catch (error) {
-        console.error('Error fetching services:', error);
+        console.error('Registration failed:', error)
+        showNotification('Registration process encountered an error', 'error')
       }
-    },
-    updateSubservices() {
-      if (this.selectedService) {
-        this.subservices = this.selectedService.subservices;
+    }
+
+    const fetchExpertiseAreas = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:5000/services/listServices')
+        expertiseAreas.push(...response.data)
+      } catch (error) {
+        console.error('Error fetching expertise areas:', error)
+        showNotification('Failed to load expertise areas', 'error')
+      }
+    }
+
+    const updateSpecializations = () => {
+      if (registrationDetails.selectedExpertise) {
+        specializations.splice(0, specializations.length, 
+          ...registrationDetails.selectedExpertise.subservices)
       } else {
-        this.subservices = [];
+        specializations.splice(0, specializations.length)
       }
-      this.selectedSubservice = null;
-    },
-  },
-  mounted() {
-    this.fetchAvailableServices();
+      registrationDetails.selectedSpecialization = null
+    }
+
+    const navigateHome = () => {
+      router.push('/')
+    }
+
+    fetchExpertiseAreas()
+
+    return {
+      registrationDetails,
+      notificationDetails,
+      expertiseAreas,
+      specializations,
+      isFormComplete,
+      processRegistration,
+      updateSpecializations,
+      handlePortfolioUpload,
+      navigateHome,
+      clearNotification
+    }
   }
-};
+}
 </script>
-  
-  <style scoped>
-  .vh-100 {
-    height: 100vh;
+
+<style scoped>
+.professional-portal {
+  background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+}
+
+.registration-wrapper {
+  width: 100%;
+  max-width: 1000px;
+}
+
+.content-card {
+  overflow: hidden;
+}
+
+.registration-header {
+  background: linear-gradient(45deg, #303f9f, #1976d2);
+}
+
+.welcome-text {
+  font-size: 2rem;
+}
+
+.input-wrapper {
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.custom-input {
+  height: 3.5rem;
+  padding: 1rem 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 0.5rem;
+  transition: border-color 0.2s;
+}
+
+.custom-input:focus {
+  border-color: #1976d2;
+  box-shadow: none;
+}
+
+.input-wrapper label {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: white;
+  padding: 0 0.25rem;
+  color: #757575;
+  transition: all 0.2s ease-out;
+  pointer-events: none;
+}
+
+.custom-input:focus ~ label,
+.custom-input:not(:placeholder-shown) ~ label {
+  top: 0;
+  transform: translateY(-50%) scale(0.85);
+  color: #1976d2;
+}
+
+textarea.custom-input {
+  height: auto;
+  padding-top: 1.5rem;
+}
+
+textarea.custom-input ~ label {
+  top: 1.5rem;
+}
+
+textarea.custom-input:focus ~ label,
+textarea.custom-input:not(:placeholder-shown) ~ label {
+  top: 0;
+}
+
+.action-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: transform 0.2s;
+}
+
+.submit-button {
+  background: linear-gradient(45deg, #303f9f, #1976d2);
+  color: white;
+}
+
+.submit-button:disabled {
+  background: #9e9e9e;
+}
+
+.cancel-button {
+  background: #f5f5f5;
+  color: #303f9f;
+}
+
+.action-button:active {
+  transform: scale(0.98);
+}
+
+.notification-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+}
+
+.notification-content {
+  position: relative;
+  padding: 1rem 2.5rem 1rem 1rem;
+  border-radius: 0.5rem;
+  background: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 90%;
+  width: 400px;
+}
+
+.notification-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.notification-success {
+  border-left: 4px solid #4caf50;
+}
+
+.notification-error {
+  border-left: 4px solid #f44336;
+}
+
+.notification-warning {
+  border-left: 4px solid #ff9800;
+}
+
+@media (max-width: 768px) {
+  .registration-wrapper {
+    padding: 1rem;
   }
-  
-  .d-flex {
-    display: flex;
+
+  .welcome-text {
+    font-size: 1.5rem;
   }
-  
-  .justify-content-center {
-    justify-content: center;
+
+  .action-button {
+    padding: 0.5rem 1rem;
   }
-  
-  .align-items-center {
-    align-items: center;
-  }
-  
-  .container {
-    max-width: auto;
-    padding: 20px;
-  }
-  
-  .form-container {
-    background-color: #2c3e50;
-    color: white;
-  }
-  
-  .border {
-    border: 1px solid #007bff;
-  }
-  
-  .p-4 {
-    padding: 1.5rem !important;
-  }
-  
-  .mb-3 {
-    margin-bottom: 1rem !important;
-  }
-  
-  .btn-block {
-    display: block;
-    width: 100%;
-  }
-  
-  .mx-auto {
-    margin-left: auto !important;
-    margin-right: auto !important;
-  }
-  
-  .text-center {
-    text-align: center !important;
-  }
-  
-  .page-colour {  
-    background-color:#1e2a3a;
-  }
-  
-  .alert-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1050;
-  }
-  
-  .btn-close {
-    background: none;
-    border: none;
-  }
-  </style>
+}
+</style>

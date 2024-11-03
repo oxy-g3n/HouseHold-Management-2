@@ -1,102 +1,175 @@
 <template>
-  <div class="services-container">
-    <div class="header">
-      <div class="logo-section">
-        <h1>Services</h1>
-        <p>All Available Services</p>
+  <div class="service-dashboard">
+    <!-- Header Section -->
+    <header class="dashboard-header">
+      <div class="header-content">
+        <div class="header-left">
+          <h1 class="text-3xl font-bold">Services Dashboard</h1>
+          <p class="text-sm opacity-75">All Available Services</p>
+        </div>
+        <div class="header-actions">
+          <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+            <input
+              type="text"
+              v-model="searchQuery"
+              placeholder="Search services or subservices"
+              class="search-input"
+              aria-label="Search services or subservices"
+            />
+          </div>
+        </div>
       </div>
-      <div class="search-create-container">
-        <label for="search-input" class="sr-only">Search services or subservices</label>
-        <input
-          id="search-input"
-          type="text"
-          class="form-control search-input"
-          placeholder="Search services or subservices"
-          v-model="searchQuery"
-          aria-label="Search services or subservices"
-        />
-      </div>
-    </div>
+    </header>
 
-    <div class="content-container">
-      <div class="services-grid-container">
-        <div v-if="processedServices.length" class="services-grid">
-          <div
-            v-for="service in processedServices"
-            :key="service.service_id"
-            class="service-card"
-            @click="toggleSubservices(service.service_id)"
-            tabindex="0"
-            role="button"
-            :aria-expanded="selectedService && selectedService.service_id === service.service_id"
-            :aria-controls="`subservices-${service.service_id}`"
+    <!-- Main Content -->
+    <main class="dashboard-content">
+      <!-- Services Grid -->
+      <div class="kanban-container" v-if="!loading">
+        <div class="kanban-wrapper">
+          <div 
+            v-for="service in processedServices" 
+            :key="service.service_id" 
+            class="kanban-column"
           >
-            <div class="service-content">
-              <h2>{{ service.service_info.service_name }}</h2>
-              <p>{{ service.service_info.service_desc }}</p>
-              <p>Created: {{ service.service_info.date_created }}</p>
+            <div class="kanban-card" :class="{ 'active': selectedService?.service_id == service.service_id }">
+              <div class="card-header">
+                <h3>{{ service.service_info.service_name }}</h3>
+              </div>
+              <p class="service-description">{{ service.service_info.service_desc }}</p>
+              
+              <div class="service-meta">
+                <span class="date">Created: {{ service.service_info.date_created }}</span>
+                <span class="subservice-count">
+                  {{ service.subservices.length }} Subservices
+                </span>
+              </div>
+              
+              <div class="card-actions">
+                <button 
+                  @click="toggleSubservices(service.service_id)"
+                  class="action-btn secondary"
+                  :class="{ 'active': selectedService?.service_id == service.service_id }"
+                >
+                  {{ selectedService?.service_id == service.service_id ? 'Hide Details' : 'View Details' }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
-        <div v-else-if="loading" class="loading" aria-live="polite">Loading services...</div>
-        <div v-else class="no-services" aria-live="polite">No services available.</div>
       </div>
 
-      <div v-if="selectedService" class="subservices-container" :id="`subservices-${selectedService.service_id}`">
-        <h3>Subservices for {{ selectedService.service_info.service_name }}</h3>
-        <table class="subservices-table">
-          <thead>
-            <tr>
-              <th scope="col">Subservice Name</th>
-              <th scope="col">Base Rate</th>
-              <th scope="col">View Servicemen</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="subservice in filteredSubservices" :key="subservice.subservice_id">
-              <td>{{ subservice.subservice_name }}</td>
-              <td>${{ subservice.base_rate }}</td>
-              <td>
-                <button @click="viewServicemen(subservice)" class="btn btn-primary">
+      <!-- Loading State -->
+      <div v-else class="loading-state">
+        <div class="loader"></div>
+        <p>Loading services...</p>
+      </div>
+
+      <!-- Slide-out Subservices Panel -->
+      <div 
+        class="subservices-panel"
+        :class="{ 'panel-open': selectedService }"
+      >
+        <div v-if="selectedService" class="panel-content">
+          <div class="panel-header">
+            <h2>{{ selectedService.service_info.service_name }} - Subservices</h2>
+            <button @click="selectedService = null" class="close-panel">
+              <i class="fas fa-times">×</i>
+            </button>
+          </div>
+          
+          <div class="subservices-list">
+            <div
+              v-for="subservice in filteredSubservices" 
+              :key="subservice.subservice_id"
+              class="subservice-item"
+            >
+              <div class="subservice-info">
+                <h4>{{ subservice.subservice_name }}</h4>
+                <p class="base-rate">Base Rate: ${{ subservice.base_rate }}</p>
+              </div>
+              <div class="subservice-actions">
+                <button 
+                  @click="viewServicemen(subservice)" 
+                  class="action-btn primary"
+                >
                   View Servicemen
                 </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div v-if="selectedSubservice" class="servicemen-container">
-        <h3>Servicemen for {{ selectedSubservice.subservice_name }}</h3>
-        <table class="servicemen-table" v-if="approvedServicemen.length">
-          <thead>
-            <tr>
-              <th scope="col" @click="sortTable('user_id')">User ID <span :class="getSortClass('user_id')"></span></th>
-              <th scope="col" @click="sortTable('full_name')">Full Name <span :class="getSortClass('full_name')"></span></th>
-              <th scope="col" @click="sortTable('average_rating')">Average Rating <span :class="getSortClass('average_rating')"></span></th>
-              <th scope="col" @click="sortTable('experience')">Experience <span :class="getSortClass('experience')"></span></th>
-              <th scope="col" @click="sortTable('pin_code')">Pin Code <span :class="getSortClass('pin_code')"></span></th>
-              <th scope="col">Request</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="person in approvedServicemen" :key="person.user_id">
-              <td>{{ person.user_id }}</td>
-              <td>{{ person.full_name }}</td>
-              <td>{{ person.average_rating !== null ? person.average_rating : 'N/A' }}</td>
-              <td>{{ person.experience }} years</td>
-              <td>{{ person.pin_code }}</td>
-              <td>
-                <button @click="requestServiceman(person.user_id, person.full_name)" class="btn btn-secondary">
-                  Request
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <div v-else aria-live="polite">No approved servicemen available for this subservice.</div>
+      <!-- Servicemen Panel -->
+      <div 
+        v-if="selectedSubservice"
+        class="servicemen-panel"
+        :class="{ 'panel-open': selectedSubservice }"
+      >
+        <div class="panel-content">
+          <div class="panel-header">
+            <h2>Servicemen for {{ selectedSubservice.subservice_name }}</h2>
+            <button @click="selectedSubservice = null" class="close-panel">
+              <i class="fas fa-times">×</i>
+            </button>
+          </div>
+          
+          <div class="servicemen-list">
+            <div v-if="approvedServicemen.length" class="servicemen-table-container">
+              <table class="servicemen-table">
+                <thead>
+                  <tr>
+                    <th @click="sortTable('user_id')">
+                      User ID 
+                      <span :class="getSortClass('user_id')"></span>
+                    </th>
+                    <th @click="sortTable('full_name')">
+                      Full Name 
+                      <span :class="getSortClass('full_name')"></span>
+                    </th>
+                    <th @click="sortTable('average_rating')">
+                      Rating 
+                      <span :class="getSortClass('average_rating')"></span>
+                    </th>
+                    <th @click="sortTable('experience')">
+                      Experience 
+                      <span :class="getSortClass('experience')"></span>
+                    </th>
+                    <th @click="sortTable('pin_code')">
+                      Pin Code 
+                      <span :class="getSortClass('pin_code')"></span>
+                    </th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="person in approvedServicemen" :key="person.user_id">
+                    <td>{{ person.user_id }}</td>
+                    <td>{{ person.full_name }}</td>
+                    <td>{{ person.average_rating !== null ? person.average_rating : 'N/A' }}</td>
+                    <td>{{ person.experience }} years</td>
+                    <td>{{ person.pin_code }}</td>
+                    <td>
+                      <button 
+                        @click="requestServiceman(person.user_id, person.full_name)" 
+                        class="action-btn primary"
+                        :disabled="!customerApproved"
+                      >
+                        Request
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div v-else class="no-servicemen">
+              No approved servicemen available for this subservice.
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </main>
   </div>
 </template>
 
@@ -143,7 +216,8 @@ export default {
     approvedServicemen() {
       return this.allServicemen
         .filter(serviceman => 
-          serviceman.service === this.selectedSubservice.subservice_name && serviceman.approval == "1"
+          serviceman.service == this.selectedSubservice.subservice_name && 
+          serviceman.approval == "1"
         )
         .sort((a, b) => {
           const modifier = this.sortAsc ? 1 : -1;
@@ -188,7 +262,7 @@ export default {
           {
             headers: {
               "Content-Type": "application/json",
-              'Authorization': `${token}`,
+              Authorization: `${token}`,
             },
           }
         );
@@ -214,18 +288,14 @@ export default {
               {
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: `${token}`
+                  Authorization: `${token}`,
                 },
               }
             );
-            if (response.data && response.data.average_rating !== undefined) {
-              serviceman.average_rating = response.data.average_rating;
-            } else {
-              serviceman.average_rating = "No ratings available";
-            }
+            serviceman.average_rating = response.data?.average_rating ?? null;
           } catch (error) {
             console.error(`Error fetching rating for serviceman ${serviceman.user_id}:`, error);
-            serviceman.average_rating = "Error";
+            serviceman.average_rating = null;
           }
         });
 
@@ -235,11 +305,10 @@ export default {
       }
     },
     toggleSubservices(serviceId) {
-      if (this.selectedService && this.selectedService.service_id === serviceId) {
+      if (this.selectedService && this.selectedService.service_id == serviceId) {
         this.selectedService = null;
       } else {
-        this.selectedService = this.rawServices.find(service => service.service_id === serviceId);
-        this.searchQuery = '';
+        this.selectedService = this.rawServices.find(service => service.service_id == serviceId);
       }
       this.selectedSubservice = null;
     },
@@ -257,6 +326,7 @@ export default {
         const customerId = localStorage.getItem("cust_id");
         const customerName = localStorage.getItem("cust_Fullname");
         const customerAddress = localStorage.getItem("cust_pin");
+        
         const requestData = {
           customer_id: customerId,
           serviceman_id: userId,
@@ -279,18 +349,18 @@ export default {
           }
         );
 
-        if (response.status === 201) {
+        if (response.status == 201) {
           alert("Service request submitted successfully!");
         } else {
           alert("Failed to submit service request. Please try again.");
         }
       } catch (error) {
         console.error("Error submitting service request:", error);
-        alert("An Error occurred while submitting the request!");
+        alert("An error occurred while submitting the request!");
       }
     },
     sortTable(key) {
-      if (this.sortKey === key) {
+      if (this.sortKey == key) {
         this.sortAsc = !this.sortAsc;
       } else {
         this.sortKey = key;
@@ -298,7 +368,7 @@ export default {
       }
     },
     getSortClass(key) {
-      if (this.sortKey === key) {
+      if (this.sortKey == key) {
         return this.sortAsc ? 'asc' : 'desc';
       }
       return '';
@@ -307,209 +377,343 @@ export default {
   created() {
     this.fetchServices();
     this.fetchServicemen();
-    this.customerApproved = localStorage.getItem("cust_approval") == 1;
+    this.customerApproved = localStorage.getItem("cust_approval") == "1";
   },
 };
 </script>
 
 <style scoped>
-.services-container {
-  font-family: Arial, sans-serif;
-  background-color: #1e2a3a;
-  color: white;
-  padding: 20px;
+.service-dashboard {
   min-height: 100vh;
+  background-color: #f8fafc;
+  color: #1e293b;
 }
 
-.header {
-  background-color: #2c3e50;
-  padding: 20px;
+.dashboard-header {
+  background-color: #1e40af;
+  padding: 1.5rem;
+  color: white;
+}
+
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-radius: 5px 5px 0 0;
 }
 
-.logo-section h1 {
-  margin: 0;
-  font-size: 24px;
+.header-actions {
+  display: flex;
+  align-items: center;
 }
 
-.logo-section p {
-  margin: 5px 0 0;
-  font-size: 14px;
+.search-box {
+  position: relative;
+  margin-right: 1rem;
 }
 
-.content-container {
-  background-color: #34495e;
+.search-input {
+  background: rgb(255, 254, 254);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  border-radius: 0.5rem;
+  color: black;
+  width: 300px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.7;
+}
+
+.dashboard-content {
+  max-width: 1400px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+  position: relative;
+}
+
+.kanban-container {
+  overflow-x: auto;
+  padding: 1rem 0;
+}
+
+.kanban-wrapper {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.5rem;
+}
+.kanban-column {
+  min-width: 320px;
+  max-width: 320px;
+  flex: 1;
+}
+
+.kanban-card {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.kanban-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.kanban-card.active {
+  border-color: #1e40af;
+  box-shadow: 0 4px 6px rgba(30, 64, 175, 0.1);
+}
+
+.card-header {
+  margin-bottom: 1rem;
+}
+
+.card-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.service-description {
+  color: #64748b;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.service-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-bottom: 1rem;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.action-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.action-btn.primary {
+  background-color: #1e40af;
   color: white;
-  padding: 20px;
-  border-radius: 0 0 5px 5px;
+}
+
+.action-btn.primary:hover {
+  background-color: #1e3a8a;
+}
+
+.action-btn.primary:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.action-btn.secondary {
+  background-color: #e2e8f0;
+  color: #1e293b;
+}
+
+.action-btn.secondary:hover {
+  background-color: #cbd5e1;
+}
+
+.action-btn.secondary.active {
+  background-color: #1e40af;
+  color: white;
+}
+
+.subservices-panel,
+.servicemen-panel {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 100%;
+  max-width: 600px;
+  height: 100vh;
+  background: white;
+  box-shadow: -4px 0 6px rgba(0, 0, 0, 0.1);
+  transition: right 0.3s ease;
+  z-index: 50;
+}
+
+.panel-open {
+  right: 0;
+}
+
+.panel-content {
+  height: 100%;
   display: flex;
   flex-direction: column;
 }
 
-.services-grid-container {
-  overflow-x: auto;
-  max-width: 100%;
-}
-
-.services-grid {
+.panel-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
   display: flex;
-  gap: 20px;
-  padding: 10px;
-  overflow-x: scroll;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.service-card {
-  background-color: #2c3e50;
-  border: 1px solid #4a6278;
-  border-radius: 5px;
-  overflow: hidden;
-  transition: box-shadow 0.3s;
-  text-align: center;
-  min-width: 400px;
-  max-width: 500px;
+.panel-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
 }
 
-.service-card:hover,
-.service-card:focus {
-  box-shadow: 0 8px 8px rgba(0, 0, 0, 0.4);
-  outline: none;
+.close-panel {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.5rem;
 }
 
-.service-content {
-  padding: 15px;
+.close-panel:hover {
+  color: #1e293b;
 }
 
-.service-content h2 {
-  margin-top: 0;
-  font-size: 18px;
+.subservices-list,
+.servicemen-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
 }
 
-.service-content p {
-  margin: 5px 0;
-  font-size: 14px;
+.subservice-item {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.table-container {
-  margin-top: 20px;
-  padding: 10px;
-  background-color: #2c3e50;
-  border-radius: 5px;
+.subservice-info h4 {
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.25rem;
 }
 
-.servicemen-table,
-.subservices-table {
+.base-rate {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.servicemen-table-container {
+  overflow-x: auto;
+}
+
+.servicemen-table {
   width: 100%;
-  background-color: #34495e;
-  border-radius: 5px;
   border-collapse: collapse;
-  color: white;
 }
 
 .servicemen-table th,
-.servicemen-table td,
-.subservices-table th,
-.subservices-table td {
-  border: 1px solid #4a6278;
-  padding: 10px;
+.servicemen-table td {
+  padding: 0.75rem 1rem;
   text-align: left;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.servicemen-table th,
-.subservices-table th {
-  background-color: #2c3e50;
+.servicemen-table th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: #1e293b;
   cursor: pointer;
 }
 
-.servicemen-table td,
-.subservices-table td {
-  background-color: #34495e;
-}
-
-/* Custom scrollbar */
-.services-grid::-webkit-scrollbar {
-  height: 8px;
-}
-
-.services-grid::-webkit-scrollbar-track {
-  background: #34495e;
-}
-
-.services-grid::-webkit-scrollbar-thumb {
-  background: #2c3e50;
-  border-radius: 5px;
-}
-
-.services-grid::-webkit-scrollbar-thumb:hover {
-  background: #4a6278;
+.servicemen-table th:hover {
+  background-color: #f1f5f9;
 }
 
 .asc::after {
-  content: ' ▲';
+  content: " ↑";
 }
 
 .desc::after {
-  content: ' ▼';
+  content: " ↓";
 }
 
-.subservices-container,
-.servicemen-container {
-  margin-top: 20px;
-  padding: 10px;
-  background-color: #2c3e50;
-  border-radius: 5px;
+.no-servicemen {
+  text-align: center;
+  color: #64748b;
+  padding: 2rem;
 }
 
-.btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
 }
 
-.btn-primary {
-  background-color: #3498db;
-  color: white;
+.loader {
+  border: 3px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 3px solid #1e40af;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
 }
 
-.btn-primary:hover {
-  background-color: #2980b9;
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-.btn-secondary {
-  background-color: #2ecc71;
-  color: white;
-}
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
 
-.btn-secondary:hover {
-  background-color: #27ae60;
-}
+  .search-input {
+    width: 100%;
+  }
 
-.search-input {
-  min-width: 200px;
-  padding: 10px;
-  border: none;
-  border-radius: 4px;
-  background-color: #34495e;
-  color: white;
-}
+  .kanban-column {
+    min-width: 280px;
+  }
 
-.search-input::placeholder {
-  color: #95a5a6;
-}
+  .subservices-panel,
+  .servicemen-panel {
+    max-width: 100%;
+  }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
+  .subservice-item {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .subservice-actions {
+    width: 100%;
+    display: flex;
+    justify-content: stretch;
+  }
+
+  .subservice-actions button {
+    width: 100%;
+  }
 }
 </style>

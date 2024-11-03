@@ -4,13 +4,13 @@
     <div class="container-fluid">
       <span class="navbar-text" id="welcome-message">{{ welcomeMessage }}</span>
       <button
-        class="navbar-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbarNav"
+      data-bs-target="#navbarNav"
         aria-controls="navbarNav"
         aria-expanded="false"
-        aria-label="Toggle navigation">
+        aria-label="Toggle navigation"
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse justify-content-end" id="navbarNav">

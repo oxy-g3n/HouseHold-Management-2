@@ -1,229 +1,286 @@
 <template>
-  <div class="serviceman-history-container">
-    <h2>Serviceman Service History</h2>
-    <div v-if="loading" class="loading" aria-live="polite">Loading history...</div>
-    <div v-else-if="requests.length === 0" class="no-requests" aria-live="polite">No service history available.</div>
-    <div v-else>
-      <!-- Charts -->
-      <div class="charts-container">
-        <div class="chart">
-          <h3>Request Status</h3>
-          <canvas ref="statusChartRef"></canvas>
+  <div class="dashboard-wrapper bg-gradient">
+    <!-- Loading State -->
+    <div v-if="loading" class="loading-state d-flex align-items-center justify-content-center">
+      <div class="spinner-border text-light" role="status">
+        <span class="visually-hidden">Loading data...</span>
+      </div>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div v-else class="dashboard-main p-4">
+      <h1 class="dashboard-header text-white mb-4">Serviceman Performance Overview</h1>
+
+      <!-- Metric Summary Cards -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-4">
+          <div class="metric-card bg-white rounded-3 p-3 h-100">
+            <div class="d-flex align-items-center">
+              <div class="metric-icon bg-info rounded-circle p-3 me-3">
+                <i class="fas fa-clipboard-list text-white"></i>
+              </div>
+              <div>
+                <h6 class="text-muted mb-1">Total Requests</h6>
+                <h2 class="mb-0 text-black">{{ serviceRequests.length }}</h2>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="chart">
-          <h3>Rating Distribution</h3>
-          <canvas ref="ratingChartRef"></canvas>
+
+        <div class="col-md-4">
+          <div class="metric-card bg-white rounded-3 p-3 h-100">
+            <div class="d-flex align-items-center">
+              <div class="metric-icon bg-success rounded-circle p-3 me-3">
+                <i class="fas fa-hammer text-white"></i>
+              </div>
+              <div>
+                <h6 class="text-muted mb-1">Active Requests</h6>
+                <h2 class="mb-0 text-black">{{ getRequestsByStatus('active').length }}</h2>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="metric-card bg-white rounded-3 p-3 h-100">
+            <div class="d-flex align-items-center">
+              <div class="metric-icon bg-warning rounded-circle p-3 me-3">
+                <i class="fas fa-hourglass-half text-white"></i>
+              </div>
+              <div>
+                <h6 class="text-muted mb-1">Pending Requests</h6>
+                <h2 class="mb-0 text-black">{{ getRequestsByStatus('requested').length }}</h2>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Requests Table -->
-      <div class="table-container">
-        <table class="requests-table">
-          <thead>
-            <tr>
-              <th @click="sortTable('serviceRequest_id')" scope="col">Request ID <span :class="getSortClass('serviceRequest_id')"></span></th>
-              <th @click="sortTable('customer_name')" scope="col">Customer Name <span :class="getSortClass('customer_name')"></span></th>
-              <th @click="sortTable('service')" scope="col">Service <span :class="getSortClass('service')"></span></th>
-              <th @click="sortTable('customer_address')" scope="col">Address <span :class="getSortClass('customer_address')"></span></th>
-              <th @click="sortTable('status')" scope="col">Status <span :class="getSortClass('status')"></span></th>
-              <th @click="sortTable('rating')" scope="col">Rating <span :class="getSortClass('rating')"></span></th>
-              <th @click="sortTable('request_begin_date')" scope="col">Start Date <span :class="getSortClass('request_begin_date')"></span></th>
-              <th @click="sortTable('request_end_date')" scope="col">End Date <span :class="getSortClass('request_end_date')"></span></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="request in sortedRequests" :key="request.serviceRequest_id">
-              <td>{{ request.serviceRequest_id }}</td>
-              <td>{{ request.customer_name }}</td>
-              <td>{{ request.service }}</td>
-              <td>{{ request.customer_address }}</td>
-              <td>{{ request.status }}</td>
-              <td>{{ request.rating !== null ? request.rating : 'N/A' }}</td>
-              <td>{{ request.request_begin_date }}</td>
-              <td>{{ request.request_end_date }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Analytics Charts -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <div class="analytics-card bg-white rounded-3 p-3">
+            <h5 class="analytics-title mb-3">Service Status Distribution</h5>
+            <canvas ref="statusChartRef"></canvas>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="analytics-card bg-white rounded-3 p-3">
+            <h5 class="analytics-title mb-3">Customer Rating Analysis</h5>
+            <canvas ref="ratingChartRef"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Service Request Categories -->
+      <div class="service-categories bg-white rounded-3 p-3">
+        <ul class="nav nav-pills mb-3" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#activeTab">
+              Active
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#requestedTab">
+              Requested
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#completedTab">
+              Completed
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#withdrawnTab">
+              Withdrawn
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="serviceTabContent">
+          <div v-for="status in ['active', 'requested', 'completed', 'withdrawn']" 
+               :key="status"
+               :class="['tab-pane fade', status == 'active' ? 'show active' : '']"
+               :id="`${status.toLowerCase()}Tab`">
+            <div class="row g-3">
+              <div v-for="request in getRequestsByStatus(status)" 
+                   :key="request.serviceRequest_id" 
+                   class="col-md-6 col-lg-4">
+                <div class="service-card h-100">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                      <h6 class="card-title mb-0 text-black">Request #{{ request.serviceRequest_id }}</h6>
+                      <span :class="getStatusBadgeClass(status)">
+                        {{ status }}
+                      </span>
+                    </div>
+                    <div class="service-info">
+                      <p class="mb-2">
+                        <i class="fas fa-user me-2"></i>
+                        {{ request.customer_name }}
+                      </p>
+                      <p class="mb-2">
+                        <i class="fas fa-wrench me-2"></i>
+                        {{ request.service }}
+                      </p>
+                      <p class="mb-2">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        {{ request.customer_address }}
+                      </p>
+                      <p class="mb-2">
+                        <i class="fas fa-calendar me-2"></i>
+                        {{ request.request_begin_date }}
+                      </p>
+                      <p class="mb-0" v-if="request.rating">
+                        <i class="fas fa-star me-2"></i>
+                        Rating: {{ request.rating }}/10
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
-<script>
-import { ref, onMounted, computed, nextTick } from 'vue';
+<script>import { ref, onMounted, nextTick } from 'vue';
 import axios from 'axios';
 import Chart from 'chart.js/auto';
 
 export default {
+  name: 'ServicemanDashboard',
+  
   setup() {
-    const requests = ref([]);
+    const serviceRequests = ref([]);
     const loading = ref(true);
-    const sortKey = ref('');
-    const sortAsc = ref(true);
     const statusChartRef = ref(null);
     const ratingChartRef = ref(null);
     let statusChart = null;
     let ratingChart = null;
 
-    const sortedRequests = computed(() => {
-      return [...requests.value].sort((a, b) => {
-        const modifier = sortAsc.value ? 1 : -1;
-        
-        if (sortKey.value === 'request_begin_date' || sortKey.value === 'request_end_date') {
-          const dateA = new Date(a[sortKey.value]);
-          const dateB = new Date(b[sortKey.value]);
-          return (dateA - dateB) * modifier;
-        }
-        
-        if (a[sortKey.value] < b[sortKey.value]) return -1 * modifier;
-        if (a[sortKey.value] > b[sortKey.value]) return 1 * modifier;
-        return 0;
-      });
-    });
-
-    const fetchRequests = async () => {
-      loading.value = true;
+    const fetchServiceData = async () => {
       try {
-        const servicemanId = localStorage.getItem("service_id");
-        const token = localStorage.getItem("service_Token");
+        const servicemanId = localStorage.getItem('service_id');
+        const token = localStorage.getItem('service_Token');
         const response = await axios.get(
           `http://127.0.0.1:5000/requests/listServices/${servicemanId}`,
           {
             headers: {
-              "Content-Type": "application/json",
-              Authorization: `${token}`,
+              'Content-Type': 'application/json',
+              'Authorization': token,
             },
           }
         );
-        requests.value = response.data;
+        serviceRequests.value = response.data;
+        // Initialize charts after data is loaded
       } catch (error) {
-        console.error("Error fetching service requests:", error);
+        console.error('Error fetching service data:', error);
       } finally {
         loading.value = false;
       }
     };
 
-    const sortTable = (key) => {
-      if (sortKey.value === key) {
-        sortAsc.value = !sortAsc.value;
-      } else {
-        sortKey.value = key;
-        sortAsc.value = true;
-      }
+    const getRequestsByStatus = (status) => {
+      return serviceRequests.value.filter(request => 
+        request.status.toLowerCase() === status.toLowerCase()
+      );
     };
 
-    const getSortClass = (key) => {
-      if (sortKey.value === key) {
-        return sortAsc.value ? 'asc' : 'desc';
-      }
-      return '';
+    const getStatusBadgeClass = (status) => {
+      const badgeClasses = {
+        active: 'badge bg-success',
+        requested: 'badge bg-warning text-dark',
+        completed: 'badge bg-info',
+        withdrawn: 'badge bg-danger'
+      };
+      return badgeClasses[status] || 'badge bg-secondary';
     };
 
-    const formatDate = (dateString) => {
-      if (!dateString) return 'N/A';
-      const date = new Date(dateString);
-      return date.toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    };
-
-    const createCharts = () => {
-      createStatusChart();
-      createRatingChart();
-    };
-
-    const createStatusChart = () => {
+    const createStatusDistribution = () => {
+      if (!statusChartRef.value) return;
+      
       if (statusChart) {
         statusChart.destroy();
       }
+
       const ctx = statusChartRef.value.getContext('2d');
-      const statusCount = {};
-      requests.value.forEach(request => {
-        statusCount[request.status] = (statusCount[request.status] || 0) + 1;
-      });
-      
+      if (!ctx) return;
+
+      const statusData = {
+        'Active': getRequestsByStatus('active').length,
+        'Requested': getRequestsByStatus('requested').length,
+        'Completed': getRequestsByStatus('completed').length,
+        'Withdrawn': getRequestsByStatus('withdrawn').length
+      };
+
       statusChart = new Chart(ctx, {
         type: 'pie',
         data: {
-          labels: Object.keys(statusCount),
+          labels: Object.keys(statusData),
           datasets: [{
-            data: Object.values(statusCount),
+            data: Object.values(statusData),
             backgroundColor: [
-              'rgba(75, 192, 192, 0.6)',
-              'rgba(255, 99, 132, 0.6)',
-              'rgba(255, 206, 86, 0.6)',
-              'rgba(54, 162, 235, 0.6)',
-            ],
+              '#198754',
+              '#ffc107',
+              '#0dcaf0',
+              '#dc3545'
+            ]
           }]
         },
         options: {
           responsive: true,
           plugins: {
             legend: {
-              labels: {
-                color: 'white'
-              }
+              position: 'bottom'
             }
           }
         }
       });
     };
 
-    const createRatingChart = () => {
+    const createRatingAnalysis = () => {
+      if (!ratingChartRef.value) return;
+      
       if (ratingChart) {
         ratingChart.destroy();
       }
+
       const ctx = ratingChartRef.value.getContext('2d');
-      const ratingDistribution = Array(10).fill(0);
-      requests.value.forEach(request => {
-        if (request.rating !== null) {
-          ratingDistribution[request.rating - 1]++;
+      if (!ctx) return;
+
+      const ratings = Array(10).fill(0);
+      serviceRequests.value.forEach(request => {
+        if (request.rating) {
+          ratings[request.rating - 1]++;
         }
       });
-      
+
       ratingChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+          labels: Array.from({ length: 10 }, (_, i) => i + 1),
           datasets: [{
             label: 'Number of Ratings',
-            data: ratingDistribution,
-            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+            data: ratings,
+            backgroundColor: '#0d6efd'
           }]
         },
         options: {
           responsive: true,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
           scales: {
             y: {
               beginAtZero: true,
-              title: {
-                display: true,
-                text: 'Number of Ratings',
-                color: 'white'
-              },
               ticks: {
-                color: 'white'
-              }
-            },
-            x: {
-              title: {
-                display: true,
-                text: 'Rating',
-                color: 'white'
-              },
-              ticks: {
-                color: 'white'
-              }
-            }
-          },
-          plugins: {
-            legend: {
-              labels: {
-                color: 'white'
+                stepSize: 1
               }
             }
           }
@@ -231,102 +288,142 @@ export default {
       });
     };
 
-    onMounted(async () => {
-      await fetchRequests();
-      nextTick(() => {
-        if (statusChartRef.value && ratingChartRef.value) {
-          createCharts();
-        } else {
-          console.error('Chart refs not available');
-        }
-      });
+    const initializeCharts = () => {
+      createStatusDistribution();
+      createRatingAnalysis();
+    };
+
+    onMounted(() => {
+      fetchServiceData().then(() => 
+    {
+      initializeCharts();
+    });
     });
 
     return {
-      requests,
+      serviceRequests,
       loading,
-      sortedRequests,
       statusChartRef,
       ratingChartRef,
-      sortTable,
-      getSortClass,
-      formatDate,
+      getRequestsByStatus,
+      getStatusBadgeClass,
     };
   }
 };
 </script>
 
 <style scoped>
-.serviceman-history-container {
-  font-family: Arial, sans-serif;
-  background-color: #1e2a3a;
-  color: white;
-  padding: 20px;
+.dashboard-wrapper {
   min-height: 100vh;
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
 }
 
-h2, h3 {
-  color: white;
-  margin-bottom: 20px;
+.dashboard-main {
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-.loading, .no-requests {
-  text-align: center;
-  padding: 20px;
-  background-color: #2c3e50;
-  border-radius: 5px;
+.dashboard-header {
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
-.charts-container {
+.loading-state {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.metric-card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-4px);
+}
+
+.metric-icon {
+  width: 48px;
+  height: 48px;
   display: flex;
-  gap: 20px;
-  margin-bottom: 30px;
+  align-items: center;
+  justify-content: center;
 }
 
-.chart {
-  background-color: #2c3e50;
-  border-radius: 5px;
-  padding: 20px;
-  flex: 1;
+.analytics-card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: 100%;
 }
 
-.table-container {
-  background-color: #2c3e50;
-  border-radius: 5px;
-  overflow-x: auto;
+.analytics-title {
+  color: #1e40af;
+  font-weight: 600;
 }
 
-.requests-table {
-  width: 100%;
-  border-collapse: collapse;
+.service-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
 }
 
-.requests-table th,
-.requests-table td {
-  border: 1px solid #4a6278;
-  padding: 12px;
-  text-align: left;
+.service-card:hover {
+  transform: translateY(-4px);
 }
 
-.requests-table th {
-  background-color: #34495e;
+.service-info p {
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+
+.service-info i {
+  color: #1e40af;
+  width: 20px;
+}
+
+.nav-pills .nav-link {
+  color: #1e40af;
+  font-weight: 500;
+  margin-right: 0.5rem;
+}
+
+.nav-pills .nav-link.active {
+  background-color: #1e40af;
   color: white;
-  cursor: pointer;
 }
 
-.requests-table tr:nth-child(even) {
-  background-color: #3a536b;
+@media (max-width: 768px) {
+  .dashboard-main {
+    padding: 1rem;
+  }
+  
+  .nav-pills {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+  
+  .nav-link {
+    white-space: nowrap;
+  }
 }
 
-.requests-table tr:hover {
-  background-color: #4a6278;
-}
-
-.asc::after {
-  content: ' ▲';
-}
-
-.desc::after {
-  content: ' ▼';
+@media print {
+  .dashboard-wrapper {
+    background: none;
+  }
+  
+  .metric-card,
+  .analytics-card,
+  .service-card {
+    box-shadow: none;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .nav-pills .nav-link {
+    border: 1px solid #e5e7eb;
+  }
 }
 </style>

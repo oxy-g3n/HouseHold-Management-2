@@ -1,55 +1,125 @@
 <template>
-  <div class="services-container">
-    <div class="header">
-      <div class="logo-section">
-        <h1>Services</h1>
-        <p>Service Management</p>
-      </div>
-      <div class="search-create-container">
-        <input type="text" class="form-control search-input" placeholder="Search Services or Subservices" v-model="searchQuery">
-        <button type="button" class="btn btn-primary create-service-btn" @click="showCreateServiceModal = true">
-          Create Service
-        </button>
-      </div>
-    </div>
-
-    <div class="content-container">
-      <div v-if="processedServices.length" class="services-grid">
-        <div v-for="service in processedServices" :key="service.service_id" class="service-card">
-          <div class="service-content">
-            <h3>{{ service.service_info.service_name }}</h3>
-            <p>{{ service.service_info.service_desc }}</p>
-            <p>Created: {{ service.service_info.date_created }}</p>
-            <div class="button-group">
-              <button @click="showAddSubserviceModal(service)" class="btn btn-success">Add Subservice</button>
-              <button @click="showDeleteSubserviceModal(service)" class="btn btn-warning">Delete Subservice</button>
-              <button @click="showEditServiceModal(service)" class="btn btn-primary">Edit Service</button>
-            </div>
-            <button @click="toggleSubservices(service)" class="btn btn-info mt-2">
-              Show Subservices
-            </button>
+  <div class="service-dashboard">
+    <!-- Header Section -->
+    <header class="dashboard-header">
+      <div class="header-content">
+        <div class="header-left">
+          <h1 class="text-3xl font-bold">Service Dashboard</h1>
+          <p class="text-sm opacity-75">Manage Your Services</p>
+        </div>
+        <div class="header-actions">
+          <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+            <input
+              type="text" 
+              v-model="searchQuery"
+              placeholder="Search services..." 
+              class="search-input text-bg-light"
+            />
           </div>
-          <button @click="confirmDeleteService(service)" class="btn btn-danger mt-2">Delete Service</button>
+          <button @click="showCreateServiceModal = true" class="create-btn">
+            <i class="fas fa-plus"></i>
+            New Service
+          </button>
         </div>
       </div>
-      <div v-else-if="loading" class="loading">
-        Loading services...
-      </div>
-      <div v-else class="no-services">
-        No services available.
-      </div>
-    </div>
+    </header>
 
-    <div class="subservices-section">
-      <h2 v-if="!selectedService">No service selected</h2>
-      <SubservicesTable
-        v-else
-        :subservices="filteredSubservices"
-        :serviceName="selectedService.service_info.service_name"
-        :searchQuery="searchQuery"
-        @edit-subservice="showEditSubserviceModal"
-      />
+    <!-- Main Content -->
+    <main class="dashboard-content">
+      <!-- Kanban Board -->
+      <div class="kanban-container" v-if="!loading">
+  <div class="kanban-wrapper">
+    <div 
+      v-for="service in processedServices" 
+      :key="service.service_id" 
+      class="kanban-column"
+    >
+      <div class="kanban-card" :class="{ 'active': selectedService?.service_id === service.service_id }">
+        <div class="card-header">
+          <h3>{{ service.service_info.service_name }}</h3>
+        </div>
+        
+        <!-- Move the action buttons outside of card-header to position them below the card name -->
+        <div class="card-actions">
+          <button @click="showEditServiceModal(service)" class="action-btn edit">
+            <i class="fas fa-pencil-alt">Edit</i>
+          </button>
+          <button @click="confirmDeleteService(service)" class="action-btn delete">
+            <i class="fas fa-trash">Delete</i>
+          </button>
+          <button @click="showDeleteSubserviceModal(service)" class="delete-subservice">
+            <i class="fas fa-trash">Delete Subservice</i>
+          </button>
+        </div>
+        <br>
+        <p class="service-description">{{ service.service_info.service_desc }}</p>
+        
+        <div class="service-meta">
+          <span class="date">Created: {{ service.service_info.date_created }}</span>
+          <span class="subservice-count">
+            {{ service.subservices.length }} Subservices
+          </span>
+        </div>
+        
+        <div class="card-actions">
+          <button @click="showAddSubserviceModal(service)" class="action-btn primary">
+            Add Subservice
+          </button>
+          <button 
+            @click="toggleSubservices(service)"
+            class="action-btn secondary"
+            :class="{ 'active': selectedService?.service_id === service.service_id }"
+          >
+            {{ selectedService?.service_id === service.service_id ? 'Hide Details' : 'View Details' }}
+          </button>
+        </div>
+      </div>
     </div>
+  </div>
+</div>
+
+
+      <!-- Loading State -->
+      <div v-else class="loading-state">
+        <div class="loader"></div>
+        <p>Loading services...</p>
+      </div>
+
+      <!-- Slide-out Subservices Panel -->
+      <div 
+        class="subservices-panel"
+        :class="{ 'panel-open': selectedService }"
+      >
+        <div v-if="selectedService" class="panel-content">
+          <div class="panel-header">
+            <h2>{{ selectedService.service_info.service_name }} - Subservices</h2>
+            <button @click="selectedService = null" class="close-panel">
+              <i class="fas fa-times">X</i>
+            </button>
+          </div>
+          
+          <div class="subservices-list">
+            <div
+              v-for="subservice in filteredSubservices" 
+              :key="subservice.subservice_id"
+              class="subservice-item">
+              <div class="subservice-info">
+                <h4>{{ subservice.subservice_name }}</h4>
+                <p class="base-rate">Base Rate: ${{ subservice.base_rate }}</p>
+              </div>
+              <div class="subservice-actions">
+                <button @click="showEditSubserviceModal(subservice)" class="edit-subservice">
+                  <i class="fas fa-pencil-alt">Edit</i>
+                </button>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
 
     <!-- Create Service Modal -->
     <div v-if="showCreateServiceModal" class="modal fade show d-block" tabindex="-1" role="dialog">
@@ -283,14 +353,11 @@
 </template>
 
 
+
 <script>
 import axios from 'axios';
-import SubservicesTable from './SubservicesTable.vue';
 
 export default {
-  components: {
-    SubservicesTable
-  },
   data() {
     return {
       rawServices: [],
@@ -384,6 +451,7 @@ export default {
       this.showAddSubserviceModalbool = true;
     },
     showDeleteSubserviceModal(service) {
+      console.log(service);
       this.selectedService = service;
       this.showDeleteSubserviceModalbool = true;
     },
@@ -588,259 +656,248 @@ export default {
 </script>
 
 <style scoped>
-.services-container {
-  font-family: Arial, sans-serif;
-  background-color: #1e2a3a;
-  color: white;
-  padding: 20px;
+.service-dashboard {
   min-height: 100vh;
+  background-color: #f8fafc;
+  color: #1e293b;
 }
 
-.header {
-  background-color: #2c3e50;
-  padding: 20px;
+.dashboard-header {
+  background-color: #1e40af;
+  padding: 1.5rem;
+  color: white;
+}
+
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-radius: 5px 5px 0 0;
 }
 
-.logo-section h1 {
-  margin: 0;
-  font-size: 24px;
-}
-
-.logo-section p {
-  margin: 5px 0 0;
-  font-size: 14px;
-}
-
-.create-service-btn {
-  background-color: #3498db;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.create-service-btn:hover {
-  background-color: #2980b9;
-}
-
-.content-container {
-  background-color: #34495e;
-  color: white;
-  padding: 20px;
-  border-radius: 0 0 5px 5px;
-}
-
-.services-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-}
-
-.service-card {
-  background-color: #2c3e50;
-  border: 1px solid #4a6278;
-  border-radius: 5px;
-  transition: box-shadow 0.3s;
-  text-align: center;
-}
-
-.service-card:hover {
-  box-shadow: 0 8px 8px rgba(0,0,0,0.4);
-}
-
-.service-content {
-  padding: 15px;
-}
-
-.service-content h3 {
-  margin-top: 0;
-  font-size: 18px;
-}
-
-.service-content p {
-  margin: 5px 0;
-  font-size: 14px;
-}
-
-.btn {
-  padding: 8px 12px;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: background-color 0.3s, color 0.3s;
-}
-
-.btn-danger {
-  background-color: #e74c3c;
-  color: white;
-}
-
-.btn-danger:hover {
-  background-color: #c0392b;
-}
-
-.btn-secondary {
-  background-color: #7f8c8d;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background-color: #6c7a7d;
-}
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-wrapper {
-  background-color: #34495e;
-  padding: 20px;
-  border-radius: 5px;
-}
-
-.modal-content {
-  color: black;
-}
-
-.modal-content p {
-  margin-bottom: 15px;
-}
-
-.modal-content .btn {
-  margin-right: 10px;
-}
-
-.loading, .no-services {
-  text-align: center;
-  padding: 20px;
-  font-size: 18px;
-}
-
-@media (max-width: 768px) {
-  .services-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .create-service-btn {
-    margin-top: 10px;
-  }
-}
-
-.search-create-container {
-  display: flex;
-  align-items: center;
+.search-box {
+  position: relative;
+  margin-right: 1rem;
 }
 
 .search-input {
-  margin-right: 1em;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  border-radius: 0.5rem;
+  color: white;
+  width: 300px;
 }
 
-.button-group {
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.7;
+}
+
+.create-btn {
+  background-color: #2563eb;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.create-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.dashboard-content {
+  max-width: 1400px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+  position: relative;
+}
+
+.kanban-container {
+  overflow-x: auto;
+  padding: 1rem 0;
+}
+
+.kanban-wrapper {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.5rem;
+}
+
+.kanban-column {
+  min-width: 320px;
+  max-width: 320px;
+}
+
+.kanban-card {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+}
+
+.kanban-card.active {
+  border-color: #2563eb;
+}
+
+.card-header {
   display: flex;
   justify-content: space-between;
-  margin-top: 10px;
+  align-items: flex-start;
+  margin-bottom: 1rem;
 }
 
-.button-group .btn {
-  flex: 1;
-  margin: 0 5px;
+.service-description {
+  color: #64748b;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
 }
 
-.subservices-section {
-  margin-top: 30px;
+.service-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 1rem;
 }
 
-.subservices-section h2 {
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.action-btn.primary {
+  background-color: #2563eb;
   color: white;
-  text-align: center;
 }
 
-.services-container {
+.action-btn.secondary {
+  background-color: #e2e8f0;
+  color: #1e293b;
+}
+
+.action-btn.edit {
+  color: #2563eb;
+}
+
+.action-btn.delete {
+  color: #dc2626;
+}
+
+.subservices-panel {
+  position: fixed;
+  right: -400px;
+  top: 0;
+  width: 400px;
+  height: 100vh;
+  background: white;
+  box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.1);
+  transition: right 0.3s ease-in-out;
+  z-index: 1000;
+}
+
+.panel-open {
+  right: 0;
+}
+
+.panel-content {
+  padding: 1.5rem;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 20px;
 }
 
-.header {
+.panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 1rem;
 }
 
-.content-container {
-  overflow-x: auto; /* Enable horizontal scrolling */
+.subservices-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.subservice-item {
   display: flex;
-  padding: 10px;
-  gap: 10px;
-  white-space: nowrap; /* Prevents cards from wrapping */
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.services-grid {
+.subservice-info h4 {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.base-rate {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.loading-state {
   display: flex;
-  gap: 20px; /* Add spacing between cards */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
 }
 
+.loader {
+  border: 3px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 3px solid #2563eb;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
 
-button-group {
+.header-actions
+{
   display: flex;
-  gap: 5px;
+  align-items: center;
 }
 
-.no-services, .loading {
-  text-align: center;
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-/* Custom scrollbar */
-.content-container::-webkit-scrollbar {
-  height: 8px;
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .search-input {
+    width: 100%;
+  }
+  
+  .subservices-panel {
+    width: 100%;
+    right: -100%;
+  }
 }
-
-.content-container::-webkit-scrollbar-track {
-  background: #34495e;
-}
-
-.content-container::-webkit-scrollbar-thumb {
-  background: #2c3e50;
-  border-radius: 5px;
-}
-
-.content-container::-webkit-scrollbar-thumb:hover {
-  background: #4a6278;
-}
-
 </style>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

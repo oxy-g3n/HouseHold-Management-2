@@ -1,205 +1,319 @@
 <template>
-  <div class="serviceman-requests-container">
-    <h2>Service Requests</h2>
-    <div v-if="loading" class="loading" aria-live="polite">Loading requests...</div>
-    <div v-else-if="requests.length === 0" class="no-requests" aria-live="polite">No pending requests available.</div>
-    <div v-else class="table-container">
-      <table class="requests-table">
-        <thead>
-          <tr>
-            <th scope="col">Request ID</th>
-            <th scope="col">Customer Name</th>
-            <th scope="col">Service</th>
-            <th scope="col">Address</th>
-            <th scope="col">Status</th>
-            <th scope="col">Request Date</th>
-            <th scope="col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="request in requests" :key="request.serviceRequest_id">
-            <td>{{ request.serviceRequest_id }}</td>
-            <td>{{ request.customer_name }}</td>
-            <td>{{ request.service }}</td>
-            <td>{{ request.customer_address }}</td>
-            <td>{{ request.status }}</td>
-            <td>{{ request.request_begin_date }}</td>
-            <td>
-              <button @click="updateRequest(request.serviceRequest_id, 'active')" class="btn btn-primary mr-2">
-                Accept
-              </button>
-              <button @click="updateRequest(request.serviceRequest_id, 'rejected')" class="btn btn-danger">
-                Reject
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+  <main class="dashboard-wrapper py-4">
+    <header class="dashboard-header mb-4 text-center rounded-3 p-3">
+      <h1 class="header-title">Service Management Portal</h1>
+      <p class="header-subtitle" v-if="pendingTasks.length">
+        Currently Processing {{ pendingTasks.length }} Service Tasks
+      </p>
+    </header>
+
+    <div v-if="isDataLoading" class="loading-indicator">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Retrieving service tasks...</span>
+      </div>
     </div>
-  </div>
+
+    <div v-else-if="pendingTasks.length === 0" class="empty-dashboard">
+      <div class="text-center p-5 bg-white rounded-3 shadow-sm">
+        <i class="bi bi-clipboard-x display-1 text-muted"></i>
+        <h2 class="mt-3">Queue Empty</h2>
+        <p class="text-muted">Your service queue is currently empty.</p>
+      </div>
+    </div>
+
+    <div v-else class="task-grid">
+      <article v-for="task in pendingTasks" 
+               :key="task.serviceRequest_id" 
+               class="task-card">
+        <header class="task-header">
+          <span class="task-identifier">Task #{{ task.serviceRequest_id }}</span>
+          <span class="task-status">{{ task.status }}</span>
+        </header>
+
+        <div class="task-details">
+          <div class="info-row">
+            <i class="bi bi-person"></i>
+            <div>
+              <small class="text-muted">Client</small>
+              <p class="mb-0 text-black">{{ task.customer_name }}</p>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <i class="bi bi-gear"></i>
+            <div>
+              <small class="text-muted">Service Type</small>
+              <p class="mb-0 text-black">{{ task.service }}</p>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <i class="bi bi-geo-alt"></i>
+            <div>
+              <small class="text-muted">Location</small>
+              <p class="mb-0 text-black">{{ task.customer_address }}</p>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <i class="bi bi-calendar3"></i>
+            <div>
+              <small class="text-muted">Requested</small>
+              <p class="mb-0 text-black">{{ task.request_begin_date }}</p>
+            </div>
+          </div>
+        </div>
+
+        <footer class="task-actions">
+          <button @click="processTask(task.serviceRequest_id, 'active')"
+                  class="btn accept-btn">
+            <i class="bi bi-check-circle me-2"></i>Accept
+          </button>
+          <button @click="processTask(task.serviceRequest_id, 'rejected')"
+                  class="btn decline-btn">
+            <i class="bi bi-x-circle me-2"></i>Decline
+          </button>
+        </footer>
+      </article>
+    </div>
+  </main>
 </template>
 
 <script>
 import axios from 'axios';
 
 export default {
+  name: 'ServiceTaskDashboard',
+  
   data() {
     return {
-      requests: [],
-      loading: true,
+      pendingTasks: [],
+      isDataLoading: true,
     };
   },
+
   methods: {
-    async fetchRequests() {
-      this.loading = true;
-      try {
-        const servicemanId = localStorage.getItem("service_id");
-        const token = localStorage.getItem("service_Token");
-        const response = await axios.get(
-          `http://127.0.0.1:5000/requests/listServices/${servicemanId}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `${token}`,
-            },
-          }
-        );
-        this.requests = response.data.filter(request => request.status === "requested");
-      } catch (error) {
-        console.error("Error fetching service requests:", error);
-      } finally {
-        this.loading = false;
-      }
-    },
-    async updateRequest(serviceRequestId, status) {
-      try {
-        const token = localStorage.getItem("service_Token");
-        const response = await axios({
-          method: 'PUT',
-          url: "http://127.0.0.1:5000/requests/editRequest",
-          data: {
-            serviceRequest_id: serviceRequestId,
-            status: status,
-          },
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `${token}`,
-          },
-          withCredentials: false,
-        });
-        alert(response.data);
-        await this.fetchRequests();
-      } catch (error) {
-        console.error("Error updating service request:", error);
-        if (error.response) {
-          console.error("Response data:", error.response.data);
-          console.error("Response status:", error.response.status);
-          console.error("Response headers:", error.response.headers);
-        } else if (error.request) {
-          console.error("No response received:", error.request);
-        } else {
-          console.error("Error setting up request:", error.message);
-        }
-        alert("Failed to update service request. Please check the console for more details.");
-      }
-    },
-    formatDate(dateString) {
-      if (!dateString) return 'N/A';
-      const date = new Date(dateString);
-      return date.toLocaleString('en-US', {
+    formatRequestDate(dateString) {
+      if (!dateString) return 'Not specified';
+      const options = {
         year: 'numeric',
-        month: 'short',
+        month: 'long',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-      });
+      };
+      return new Date(dateString).toLocaleDateString('en-US', options);
     },
+
+    async retrieveTasks() {
+      this.isDataLoading = true;
+      try {
+        const technician = localStorage.getItem("service_id");
+        const authKey = localStorage.getItem("service_Token");
+        
+        const response = await axios.get(
+          `http://127.0.0.1:5000/requests/listServices/${technician}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: authKey,
+            },
+          }
+        );
+        
+        this.pendingTasks = response.data.filter(task => 
+          task.status === "requested"
+        );
+      } catch (err) {
+        console.error("Failed to fetch tasks:", err);
+      } finally {
+        this.isDataLoading = false;
+      }
+    },
+
+    async processTask(taskId, newStatus) {
+      try {
+        const authKey = localStorage.getItem("service_Token");
+        const result = await axios({
+          method: 'PUT',
+          url: "http://127.0.0.1:5000/requests/editRequest",
+          data: {
+            serviceRequest_id: taskId,
+            status: newStatus,
+          },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: authKey,
+          },
+        });
+        
+        await this.showNotification(result.data);
+        await this.retrieveTasks();
+      } catch (err) {
+        console.error("Task processing failed:", err);
+        this.showNotification("Operation failed. Please try again.");
+      }
+    },
+
+    showNotification(message) {
+      return new Promise(resolve => {
+        alert(message);
+        resolve();
+      });
+    }
   },
-  created() {
-    this.fetchRequests();
-  },
+
+  mounted() {
+    this.retrieveTasks();
+  }
 };
 </script>
 
 <style scoped>
-.serviceman-requests-container {
-  font-family: Arial, sans-serif;
-  background-color: #1e2a3a;
-  color: white;
-  padding: 20px;
+.dashboard-wrapper {
+  background-color: #f8f9fa;
   min-height: 100vh;
+  padding: 0 1.5rem;
 }
 
-h2 {
+.dashboard-header {
+  background-color: #1e40af;
+  padding: 2rem 1rem;
+}
+
+.header-title {
   color: white;
-  margin-bottom: 20px;
+  font-size: 2.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
 }
 
-.loading, .no-requests {
-  text-align: center;
-  padding: 20px;
-  background-color: #2c3e50;
-  border-radius: 5px;
+.header-subtitle {
+  color: #e2e8f0;
+  font-size: 1.1rem;
+  margin-bottom: 0;
 }
 
-.table-container {
-  background-color: #2c3e50;
-  border-radius: 5px;
-  overflow-x: auto;
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
 }
 
-.requests-table {
-  width: 100%;
-  border-collapse: collapse;
+.task-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem 0;
 }
 
-.requests-table th,
-.requests-table td {
-  border: 1px solid #4a6278;
-  padding: 12px;
-  text-align: left;
+.task-card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: transform 0.2s ease;
 }
 
-.requests-table th {
-  background-color: #34495e;
-  color: white;
+.task-card:hover {
+  transform: translateY(-4px);
 }
 
-.requests-table tr:nth-child(even) {
-  background-color: #3a536b;
+.task-header {
+  padding: 1rem;
+  background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.requests-table tr:hover {
-  background-color: #4a6278;
+.task-identifier {
+  font-weight: 600;
+  color: #1e40af;
 }
 
-.btn {
-  padding: 6px 12px;
+.task-status {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+}
+
+.task-details {
+  padding: 1.25rem;
+}
+
+.info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-row i {
+  color: #1e40af;
+  font-size: 1.25rem;
+  margin-top: 0.25rem;
+}
+
+.task-actions {
+  padding: 1rem;
+  display: flex;
+  gap: 1rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.accept-btn {
+  flex: 1;
+  background: #e8f5e9;
+  color: #2e7d32;
   border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.2s;
 }
 
-.btn-primary {
-  background-color: #3498db;
-  color: white;
+.accept-btn:hover {
+  background: #c8e6c9;
 }
 
-.btn-primary:hover {
-  background-color: #2980b9;
+.decline-btn {
+  flex: 1;
+  background: #ffebee;
+  color: #c62828;
+  border: none;
+  transition: background-color 0.2s;
 }
 
-.btn-danger {
-  background-color: #e74c3c;
-  color: white;
+.decline-btn:hover {
+  background: #ffcdd2;
 }
 
-.btn-danger:hover {
-  background-color: #c0392b;
+@media (max-width: 768px) {
+  .dashboard-wrapper {
+    padding: 0 1rem;
+  }
+
+  .header-title {
+    font-size: 1.75rem;
+  }
+
+  .task-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .task-actions {
+    flex-direction: column;
+  }
 }
 
-.mr-2 {
-  margin-right: 8px;
+@media (prefers-reduced-motion: reduce) {
+  .task-card {
+    transition: none;
+  }
 }
 </style>

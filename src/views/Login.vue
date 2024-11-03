@@ -1,203 +1,329 @@
 <template>
-  <div class="py-tutorial-container d-flex justify-content-center align-items-center">
-    <div class="content-container">
-      <div class="header">
-        <h2>Login</h2>
-      </div>
-      <form @submit.prevent="login" class="form-container border p-5 rounded">
-        <div class="form-group">
-          <label for="username">Username:</label>
-          <input type="text" id="username" v-model="username" class="form-control">
-        </div>
-        <div class="form-group">
-          <label for="password">Password:</label>
-          <input type="password" id="password" v-model="password" class="form-control">
-        </div>
-        <div class="row">
-          <div class="col-md-12 mb-3">
-            <button type="submit" class="btn btn-primary btn-block">Login</button>
-          </div>
-          <div class="col-md-6 mb-2">
-            <button type="button" class="btn btn-info btn-block" @click="CustRegister">Customer<br>Register</button>
-          </div>
-          <div class="col-md-6">
-            <button type="button" class="btn btn-info btn-block" @click="ServiceRegister">Serviceman Register</button>
-          </div>
-        </div>
-      </form>
-      <!-- Fullscreen Alert Overlay -->
-      <div v-if="alertMessage" class="alert-overlay d-flex justify-content-center align-items-center">
-        <div class="alert" :class="alertClass" role="alert">
-          {{ alertMessage }}
-          <button type="button" class="close" @click="alertMessage = ''" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
+  <section class="auth-wrapper position-relative">
+    <div class="portal-container mx-auto p-4">
+      <div class="entry-card bg-white shadow-lg rounded-3">
+        <header class="portal-header text-center p-4 bg-gradient">
+          <span class="portal-icon display-4">🔐</span>
+          <h1 class="welcome-text mt-3 text-black">Welcome Back!</h1>
+        </header>
+
+        <main class="credential-form p-4">
+          <form @submit.prevent="authenticateUser">
+            <div class="field-wrapper mb-4">
+              <div class="floating-input position-relative">
+                <input 
+                  type="text"
+                  id="identityField"
+                  v-model="credentials.identifier"
+                  class="credential-input form-control"
+                  required
+                  autocomplete="username"
+                >
+                <label for="identityField" class="floating-label">Username</label>
+              </div>
+            </div>
+
+            <div class="field-wrapper mb-4">
+              <div class="floating-input position-relative">
+                <input 
+                  type="password"
+                  id="secretField"
+                  v-model="credentials.secret"
+                  class="credential-input form-control"
+                  required
+                  autocomplete="current-password"
+                >
+                <label for="secretField" class="floating-label">Password</label>
+              </div>
+            </div>
+
+            <div class="action-buttons">
+              <button type="submit" class="portal-btn enter-btn w-100 mb-3">
+                Login
+              </button>
+              
+              <div class="row g-2">
+                <div class="col-6">
+                  <button 
+                    type="button" 
+                    class="portal-btn register-btn w-100 h-100"
+                    @click="navigateToRegistration('individual')"
+                  >
+                    New Customer
+                  </button>
+                </div>
+                <div class="col-6">
+                  <button 
+                    type="button" 
+                    class="portal-btn register-btn w-100"
+                    @click="navigateToRegistration('provider')"
+                  >
+                    New Service Provider
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </main>
       </div>
     </div>
-  </div>
+
+    <div 
+      v-if="notification.message" 
+      class="notification-overlay"
+      @click="dismissNotification"
+    >
+      <div 
+        class="notification-box"
+        :class="notification.type"
+        @click.stop
+      >
+        <p class="notification-text mb-0">{{ notification.message }}</p>
+        <button 
+          class="notification-dismiss btn-close"
+          @click="dismissNotification"
+          aria-label="Close notification"
+        ></button>
+      </div>
+    </div>
+  </section>
 </template>
 
 <script>
-import axios from 'axios';
-import { useRouter } from 'vue-router';
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 export default {
-  data() {
-    return {
-      username: '',
-      password: '',
-      alertMessage: '',
-      alertClass: '',
-    };
-  },
+  name: 'AuthPortal',
+  
   setup() {
-    const router = useRouter();
-    return { router };
-  },
-  methods: {
-    async login() {
+    const router = useRouter()
+    const credentials = reactive({
+      identifier: '',
+      secret: ''
+    })
+    
+    const notification = reactive({
+      message: '',
+      type: ''
+    })
+
+    const showNotification = (message, type) => {
+      notification.message = message
+      notification.type = `notification-${type}`
+    }
+
+    const dismissNotification = () => {
+      notification.message = ''
+      notification.type = ''
+    }
+
+    const authenticateUser = async () => {
       try {
         const response = await axios.post('http://127.0.0.1:5000/users/auth', {
-          username: this.username,
-          password: this.password,
+          username: credentials.identifier,
+          password: credentials.secret,
           action: "login"
-        });
-        if (response.data.Success) {
-          this.showAlert('Login Successful', 'alert-success');
-          const token = response.data.token;
-          const user_id = response.data.user_id;
-          const full_name = response.data.full_name;
-          const pin_code = response.data.pin_code;
-          const approval = response.data.approval;
-          const username = this.username;
-          console.log(approval);
-          if (response.data.role === 'customer') {
-            setTimeout(() => {
-              localStorage.setItem('cust_Token', token);
-              localStorage.setItem('cust_name', username);
-              localStorage.setItem('cust_id', user_id);
-              localStorage.setItem('cust_Fullname', full_name);
-              localStorage.setItem('cust_pin', pin_code);
-              localStorage.setItem('cust_approval', approval);
+        })
 
-              this.$router.push('/Custdash');
-            }, 1000);
+        if (response.data.Success) {
+          showNotification('Authentication successful', 'success')
+          const userInfo = response.data
+          
+          const roleMap = {
+            customer: {
+              route: '/Custdash',
+              storage: {
+                token: ['cust_Token', userInfo.token],
+                name: ['cust_name', credentials.identifier],
+                id: ['cust_id', userInfo.user_id],
+                fullName: ['cust_Fullname', userInfo.full_name],
+                pinCode: ['cust_pin', userInfo.pin_code],
+                approval: ['cust_approval', userInfo.approval]
+              }
+            },
+            serviceman: {
+              route: '/Servicedash',
+              storage: {
+                token: ['service_Token', userInfo.token],
+                name: ['service_name', credentials.identifier],
+                id: ['service_id', userInfo.user_id],
+                fullName: ['service_Fullname', userInfo.full_name]
+              }
+            },
+            admin: {
+              route: '/adminDash',
+              storage: {
+                token: ['admin_Token', userInfo.token],
+                name: ['admin_name', credentials.identifier],
+                id: ['admin_id', userInfo.user_id],
+                fullName: ['admin_Fullname', userInfo.full_name]
+              }
+            }
           }
-          if (response.data.role === 'serviceman') {
-            setTimeout(() => {
-              localStorage.setItem('service_Token', token);
-              localStorage.setItem('service_name', username);
-              localStorage.setItem('service_id', user_id);
-              localStorage.setItem('service_Fullname', full_name);
-              this.$router.push('/Servicedash');
-            }, 1000);
-          }
-          if (response.data.role === 'admin') {
-            setTimeout(() => {
-              localStorage.setItem('admin_Token', token);
-              localStorage.setItem('admin_name', username);
-              localStorage.setItem('admin_id', user_id);
-              localStorage.setItem('admin_Fullname', full_name);
-              this.$router.push('/adminDash');
-            }, 1000);
-          }
+
+          const roleConfig = roleMap[userInfo.role]
+          
+          setTimeout(() => {
+            Object.values(roleConfig.storage).forEach(([key, value]) => {
+              localStorage.setItem(key, value)
+            })
+            router.push(roleConfig.route)
+          }, 1000)
         } else {
-          this.showAlert('The username entered does not exist or the password is incorrect!', 'alert-warning');
+          showNotification('Invalid credentials provided', 'warning')
         }
       } catch (error) {
-        console.error('Login error:', error);
-        this.showAlert('An error occurred during login', 'alert-danger');
+        console.error('Authentication failed:', error)
+        showNotification('Authentication process failed', 'error')
       }
-    },
-    CustRegister() {
-      this.$router.push('/CustomerRegistration');
-    },
-    ServiceRegister() {
-      this.$router.push('/ServiceRegistration');
-    },
-    showAlert(message, alertClass) {
-      this.alertMessage = message;
-      this.alertClass = `alert ${alertClass} alert-dismissible fade show`;
+    }
+
+    const navigateToRegistration = (type) => {
+      const routes = {
+        individual: '/CustomerRegistration',
+        provider: '/ServiceRegistration'
+      }
+      router.push(routes[type])
+    }
+
+    return {
+      credentials,
+      notification,
+      authenticateUser,
+      navigateToRegistration,
+      dismissNotification
     }
   }
-};
+}
 </script>
 
 <style scoped>
-.py-tutorial-container {
-  font-family: Arial, sans-serif;
-  background-color: #1e2a3a;
-  color: white;
+.auth-wrapper {
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+  display: grid;
+  place-items: center;
 }
 
-.content-container {
-  background-color: white;
-  color: black;
-  border-radius: 5px;
+.portal-container {
   width: 100%;
-  max-width: 500px;
-  padding: 20px;
+  max-width: 480px;
 }
 
-.header {
-  background-color: #2c3e50;
-  padding: 20px;
-  border-radius: 5px;
-  text-align: center;
-  margin-bottom: 20px;
+.entry-card {
+  overflow: hidden;
 }
 
-.form-container {
-  border: 1px solid #007bff;
+.portal-header {
+  background: linear-gradient(45deg, #303f9f, #1976d2);
 }
 
-.form-group {
+.welcome-text {
+  color: #ffffff;
+  font-size: 1.75rem;
+  font-weight: 300;
+}
+
+.floating-input {
   margin-bottom: 1rem;
 }
 
-.btn-block {
-  display: block;
-  width: 100%;
+.credential-input {
+  height: 3.5rem;
+  padding: 1rem 0.75rem;
+  font-size: 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 0.5rem;
+  transition: border-color 0.2s;
 }
 
-.alert-overlay {
+.credential-input:focus {
+  border-color: #1976d2;
+  box-shadow: none;
+}
+
+.floating-label {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  transition: 0.2s ease all;
+  color: #757575;
+  pointer-events: none;
+}
+
+.credential-input:focus ~ .floating-label,
+.credential-input:not(:placeholder-shown) ~ .floating-label {
+  top: 0;
+  font-size: 0.875rem;
+  color: #1976d2;
+  background: white;
+  padding: 0 0.25rem;
+}
+
+.portal-btn {
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: transform 0.2s;
+}
+
+.portal-btn:active {
+  transform: scale(0.98);
+}
+
+.enter-btn {
+  background: linear-gradient(45deg, #303f9f, #1976d2);
+  color: white;
+}
+
+.register-btn {
+  background: #f5f5f5;
+  color: #303f9f;
+}
+
+.notification-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 1050;
+  display: grid;
+  place-items: center;
+  z-index: 1000;
 }
 
-.alert {
-  flex :auto;
+.notification-box {
   position: relative;
-  margin: 1.25rem auto;
-  border: 1px solid transparent;
-  border-radius: .375rem;
-  padding: .75rem 1.25rem;
-  max-width: 500px;
+  padding: 1rem 2rem;
+  border-radius: 0.5rem;
+  background: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 90%;
+  width: 400px;
 }
 
-.close {
+.notification-dismiss {
   position: absolute;
-  top: .5rem;
-  right: .5rem;
+  top: 0.5rem;
+  right: 0.5rem;
 }
 
-@media (max-width: 768px) {
-  .form-container {
+.notification-success { border-left: 4px solid #2e7d32; }
+.notification-warning { border-left: 4px solid #f57c00; }
+.notification-error { border-left: 4px solid #c62828; }
+
+@media (max-width: 576px) {
+  .portal-container {
     padding: 1rem;
   }
-}
-
-.header h2 {
-  color: white;
+  
+  .welcome-text {
+    font-size: 1.5rem;
+  }
 }
 </style>

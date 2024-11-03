@@ -9,7 +9,7 @@
   </template>
   
   <script>
-  import CustomerNav from '@/components/CustomerNav.vue';
+  import CustomerNav from '@/components/CconsumerNav.vue';
 
   
   export default {
@@ -25,7 +25,7 @@
   
   <style scoped>
   .dashboard-layout {
-    background-color: #7f8c8d; /* Dark blue background */
+    background-color: #000567; /* Dark blue background */
     color: white; /* Optional: Adjust text color for better contrast */
     min-height: 100vh; /* Ensure it covers the full viewport height */
     display: flex;
