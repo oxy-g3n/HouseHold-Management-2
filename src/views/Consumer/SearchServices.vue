@@ -258,7 +258,7 @@ export default {
       try {
         const token = localStorage.getItem("cust_Token");
         const response = await axios.get(
-          "http://127.0.0.1:5000/users/getServicemen",
+          "http://127.0.0.1:5000/users/getProviders",
           {
             headers: {
               "Content-Type": "application/json",

@@ -9,8 +9,8 @@
   </template>
   
   <script>
-  import CustomerNav from '@/components/CconsumerNav.vue';
-
+  import CustomerNav from '@/components/ConsumerNav.vue';
+  
   
   export default {
     name: 'Custdash',

@@ -2,19 +2,19 @@ import { createRouter, createWebHashHistory } from "vue-router";
 // import HomeView from "../views/HomeView.vue";
 import Login from "../views/Login.vue";
 import RegisterServiceman from "@/views/Serviceman/RegisterServiceman.vue";
-import RegisterCustomer from "@/views/Customer/RegisterCustomer.vue";
+import RegisterCustomer from "@/views/Consumer/RegisterCustomer.vue";
 
 
 //Dashes
 import ServiceDash from "@/views/Serviceman/ServiceDash.vue";
 import AdminDash from "@/views/Admin/AdministratorDashboard.vue";
-import CustDash from "@/views/Customer/CustDash.vue";
+import CustDash from "@/views/Consumer/CustDash.vue";
 
 //Customer
-import MyServices from "@/views/Customer/MyServices.vue";
-import SearchServices from "@/views/Customer/SearchServices.vue";
-import Summary from "@/views/Customer/Summary.vue";
-import custEditProf from "@/views/Customer/custEditProf.vue";
+import MyServices from "@/views/Consumer/MyServices.vue";
+import SearchServices from "@/views/Consumer/SearchServices.vue";
+import Summary from "@/views/Consumer/Summary.vue";
+import custEditProf from "@/views/Consumer/custEditProf.vue";
 
 //Servicemen
 import Requests from "@/views/Serviceman/Requests.vue";
@@ -22,8 +22,8 @@ import History from "@/views/Serviceman/History.vue";
 import Editprof from "@/views/Serviceman/Editprof.vue";
 
 //Admin
-import AdminServices from "@/views/Admin/AdministratorServices.vue";
-import allRequests from "@/views/Admin/AdministratorStaticstics.vue";
+import AdminProvisions from "@/views/Admin/AdministratorProvisions.vue";
+import AdminStats from "@/views/Admin/AdministratorStaticstics.vue";
 import ApprovalCentre from "@/views/Admin/AdministratorApprovalCentre.vue";
 
 const routes = [
@@ -104,12 +104,12 @@ const routes = [
       {
         path: 'Services',
         name: 'Services',
-        component: AdminServices
+        component: AdminProvisions
       },
       {
-        path: 'allRequests',
-        name: 'allRequests',
-        component: allRequests
+        path: 'allrequests',
+        name: 'allrequests',
+        component: AdminStats
       },
       {
         path: 'ApprovalCentre',

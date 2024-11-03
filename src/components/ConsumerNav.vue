@@ -1,16 +1,19 @@
-<!-- src/components/AdminNavigation.vue -->
+<!-- src/components/Navbar.vue -->
 <template>
-  <nav class="admin-navigation">
+  <nav class="customer-navigation">
     <div class="nav-container">
       <!-- Brand Section -->
       <div class="brand-section">
-        <div class="admin-profile">
+        <div class="customer-profile">
           <div class="profile-avatar">
             {{ getInitials() }}
           </div>
-          <div class="admin-info">
-            <h2 class="admin-name">{{ adminName }}</h2>
-            <span class="admin-id">ID: {{ adminId }}</span>
+          <div class="customer-info">
+            <h2 class="customer-name">{{ customerName }}</h2>
+            <span class="customer-id">ID: {{ customerId }}</span>
+            <span v-if="approvalStatus !== '1'" class="approval-status">
+              Not Approved by Admin!
+            </span>
           </div>
         </div>
       </div>
@@ -36,7 +39,7 @@
               :to="item.path"
               class="nav-link"
               :class="{ 'active': currentRoute === item.path }"
-              @click="handleNavClick(item)"
+              @click="isMenuOpen = false"
             >
               <i :class="item.icon"></i>
               <span>{{ item.label }}</span>
@@ -64,67 +67,69 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 
 export default {
-  name: 'AdminNavigation',
+  name: 'CustNav',
   
   setup() {
     const router = useRouter();
     const route = useRoute();
     const isMenuOpen = ref(false);
-    const adminName = ref('');
-    const adminId = ref('');
+    const customerName = ref('');
+    const customerId = ref('');
+    const approvalStatus = ref('');
 
     const navItems = [
       { 
-        label: 'Services',
-        path: '/adminDash/Services',
-        icon: 'fas fa-cogs'
+        label: 'Search',
+        path: '/Custdash/SearchServices',
+        icon: 'fas fa-search'
       },
       { 
-        label: 'Analytics',
-        path: '/adminDash/allRequests',
-        icon: 'fas fa-chart-line'
+        label: 'My Services',
+        path: '/Custdash/MyServices',
+        icon: 'fas fa-briefcase'
       },
       { 
-        label: 'Approvals',
-        path: '/adminDash/ApprovalCentre',
-        icon: 'fas fa-user-check'
+        label: 'Summary',
+        path: '/Custdash/Summary',
+        icon: 'fas fa-chart-bar'
+      },
+      { 
+        label: 'Edit Profile',
+        path: '/Custdash/editProf',
+        icon: 'fas fa-user-edit'
       }
     ];
 
     const currentRoute = computed(() => route.path);
 
     const getInitials = () => {
-      return adminName.value
+      return customerName.value
         .split(' ')
         .map(word => word[0])
         .join('')
         .toUpperCase();
     };
 
-    const handleNavClick = (item) => {
-      isMenuOpen.value = false;
-      if (item.action) item.action();
-    };
-
     const handleLogout = () => {
-      ['admin_Token', 'admin_name', 'admin_id', 'admin_Fullname']
+      ['cust_Token', 'cust_name', 'cust_id', 'cust_Fullname', 'cust_approval']
         .forEach(key => localStorage.removeItem(key));
       router.push('/');
     };
 
     onMounted(() => {
-      adminName.value = localStorage.getItem('admin_Fullname') || 'Admin User';
-      adminId.value = localStorage.getItem('admin_id') || 'N/A';
+      customerName.value = localStorage.getItem('cust_Fullname') || 'Customer';
+      customerId.value = localStorage.getItem('cust_id') || 'N/A';
+      approvalStatus.value = localStorage.getItem('cust_approval') || '0';
     });
 
     return {
       isMenuOpen,
       navItems,
       currentRoute,
-      adminName,
-      adminId,
+      customerName,
+      customerId,
+      approvalStatus,
       getInitials,
-      handleNavClick,
       handleLogout
     };
   }
@@ -132,7 +137,7 @@ export default {
 </script>
 
 <style scoped>
-.admin-navigation {
+.customer-navigation {
   background: linear-gradient(45deg, #303f9f, #1976d2);
   padding: 1rem 2rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -150,7 +155,7 @@ export default {
   flex-shrink: 0;
 }
 
-.admin-profile {
+.customer-profile {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -169,19 +174,27 @@ export default {
   font-size: 1.1rem;
 }
 
-.admin-info {
+.customer-info {
   color: white;
 }
 
-.admin-name {
+.customer-name {
   font-size: 1rem;
   margin: 0;
   font-weight: 600;
 }
 
-.admin-id {
+.customer-id {
   font-size: 0.8rem;
   opacity: 0.8;
+  display: block;
+}
+
+.approval-status {
+  font-size: 0.8rem;
+  color: #ff9800;
+  display: block;
+  margin-top: 0.2rem;
 }
 
 .nav-content {
@@ -316,7 +329,7 @@ export default {
 
   .nav-actions {
     width: 100%;
-    justify-content: space-between;
+    justify-content: center;
   }
 }
 </style>

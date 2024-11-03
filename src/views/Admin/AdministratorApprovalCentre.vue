@@ -6,16 +6,16 @@
       <div class="control-panel d-flex gap-3 align-items-center flex-wrap">
         <div class="segment-control d-flex rounded-pill overflow-hidden">
           <button 
-            @click="activeSection = 'servicemen'"
-            :class="['segment-btn', activeSection === 'servicemen' ? 'active' : '']"
+            @click="activeSection = 'providers'"
+            :class="['segment-btn', activeSection === 'providers' ? 'active' : '']"
           >
-            Service Providers
+            Providers
           </button>
           <button 
-            @click="activeSection = 'customers'"
-            :class="['segment-btn', activeSection === 'customers' ? 'active' : '']"
+            @click="activeSection = 'consumers'"
+            :class="['segment-btn', activeSection === 'consumers' ? 'active' : '']"
           >
-            Customers
+            Consumers
           </button>
         </div>
         
@@ -49,7 +49,7 @@
           <div class="user-card">
             <div class="user-card-header d-flex justify-content-between align-items-center">
               <h3 class="user-name mb-0">
-                <template v-if="activeSection === 'servicemen'">
+                <template v-if="activeSection === 'providers'">
                   <button 
                     class="pdf-button"
                     @click="showPdfPreview(user)"
@@ -68,7 +68,6 @@
               </h3>
               <div class="approval-toggle flex-column">
                 <label class="switch">
-                  Toggle Approval
                   <input 
                     type="checkbox"
                     :checked="user.approval"
@@ -86,10 +85,10 @@
                   <span class="detail-value">{{ user.user_id }}</span>
                 </div>
                 
-                <template v-if="activeSection === 'servicemen'">
+                <template v-if="activeSection === 'providers'">
                   <div class="detail-row">
-                    <span class="detail-label">Service:</span>
-                    <span class="detail-value">{{ user.service }}</span>
+                    <span class="detail-label">Provision:</span>
+                    <span class="detail-value">{{ user.provision }}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Rating:</span>
@@ -133,7 +132,7 @@
     >
       <div class="preview-header">
         <h4>{{ previewUser.full_name }}</h4>
-        <p>Service Provider Details</p>
+        <p>Provider Details</p>
       </div>
       <div class="preview-body">
         <p>Click to view complete profile and certificates</p>
@@ -150,15 +149,15 @@ export default {
   name: 'UserManagementTimeline',
   
   setup() {
-    const activeSection = ref('servicemen');
-    const servicemen = ref([]);
-    const customers = ref([]);
+    const activeSection = ref('providers');
+    const providers = ref([]);
+    const consumers = ref([]);
     const searchQuery = ref('');
     const previewUser = ref(null);
     const mousePosition = ref({ x: 0, y: 0 });
 
     const filteredUsers = computed(() => {
-      const users = activeSection.value === 'servicemen' ? servicemen.value : customers.value;
+      const users = activeSection.value === 'providers' ? providers.value : consumers.value;
       if (!searchQuery.value) return users;
       
       const query = searchQuery.value.toLowerCase();
@@ -185,13 +184,13 @@ export default {
           Authorization: token,
         };
 
-        const [servicemanResponse, customerResponse] = await Promise.all([
-          axios.get("http://127.0.0.1:5000/users/getServicemen", { headers }),
-          axios.get("http://127.0.0.1:5000/users/getCustomers", { headers })
+        const [providerResponse, consumerResponse] = await Promise.all([
+          axios.get("http://127.0.0.1:5000/users/getProviders", { headers }),
+          axios.get("http://127.0.0.1:5000/users/getConsumers", { headers })
         ]);
 
-        servicemen.value = servicemanResponse.data;
-        customers.value = customerResponse.data;
+        providers.value = providerResponse.data;
+        consumers.value = consumerResponse.data;
       } catch (error) {
         console.error("Error fetching users:", error);
         // Using native browser alert for simplicity

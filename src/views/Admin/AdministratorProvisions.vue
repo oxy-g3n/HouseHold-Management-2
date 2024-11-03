@@ -4,8 +4,8 @@
     <header class="dashboard-header">
       <div class="header-content">
         <div class="header-left">
-          <h1 class="text-3xl font-bold">Service Dashboard</h1>
-          <p class="text-sm opacity-75">Manage Your Services</p>
+          <h1 class="text-3xl font-bold">Provisions Dashboard</h1>
+          <p class="text-sm opacity-75">Manage Provisions</p>
         </div>
         <div class="header-actions">
           <div class="search-box">
@@ -13,13 +13,13 @@
             <input
               type="text" 
               v-model="searchQuery"
-              placeholder="Search services..." 
+              placeholder="Search provisions..." 
               class="search-input text-bg-light"
             />
           </div>
           <button @click="showCreateServiceModal = true" class="create-btn">
             <i class="fas fa-plus"></i>
-            New Service
+            New Provision
           </button>
         </div>
       </div>
@@ -49,7 +49,7 @@
             <i class="fas fa-trash">Delete</i>
           </button>
           <button @click="showDeleteSubserviceModal(service)" class="delete-subservice">
-            <i class="fas fa-trash">Delete Subservice</i>
+            <i class="fas fa-trash">Delete SubProvision</i>
           </button>
         </div>
         <br>
@@ -58,13 +58,13 @@
         <div class="service-meta">
           <span class="date">Created: {{ service.service_info.date_created }}</span>
           <span class="subservice-count">
-            {{ service.subservices.length }} Subservices
+            {{ service.subservices.length }} SubProvisions
           </span>
         </div>
         
         <div class="card-actions">
           <button @click="showAddSubserviceModal(service)" class="action-btn primary">
-            Add Subservice
+            Add Subprovision
           </button>
           <button 
             @click="toggleSubservices(service)"
@@ -83,7 +83,7 @@
       <!-- Loading State -->
       <div v-else class="loading-state">
         <div class="loader"></div>
-        <p>Loading services...</p>
+        <p>Loading provisions...</p>
       </div>
 
       <!-- Slide-out Subservices Panel -->
@@ -93,7 +93,7 @@
       >
         <div v-if="selectedService" class="panel-content">
           <div class="panel-header">
-            <h2>{{ selectedService.service_info.service_name }} - Subservices</h2>
+            <h2>{{ selectedService.service_info.service_name }} - SubProvisions</h2>
             <button @click="selectedService = null" class="close-panel">
               <i class="fas fa-times">X</i>
             </button>
@@ -126,7 +126,7 @@
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Create New Service</h5>
+            <h5 class="modal-title">Create New Provision</h5>
             <button type="button" class="close" @click="closeCreateServiceModal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -134,7 +134,7 @@
           <div class="modal-body">
             <form @submit.prevent="submitCreateServiceForm">
               <div class="form-group">
-                <label for="serviceName">Service Name</label>
+                <label for="serviceName">Provision Name</label>
                 <input
                   type="text"
                   class="form-control"
@@ -144,7 +144,7 @@
                 />
               </div>
               <div class="form-group">
-                <label for="serviceDescription">Service Description</label>
+                <label for="serviceDescription">Provision Description</label>
                 <textarea
                   class="form-control"
                   id="serviceDescription"
@@ -168,7 +168,7 @@
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Add Subservice</h5>
+            <h5 class="modal-title">Add Subprovision</h5>
             <button type="button" class="close" @click="closeAddSubserviceModal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -176,7 +176,7 @@
           <div class="modal-body">
             <form @submit.prevent="submitAddSubserviceForm">
               <div class="form-group">
-                <label for="subserviceName">Subservice Name</label>
+                <label for="subserviceName">Subprovision Name</label>
                 <input
                   type="text"
                   class="form-control"
@@ -212,7 +212,7 @@
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Delete Subservice</h5>
+            <h5 class="modal-title">Delete Subprovision</h5>
             <button type="button" class="close" @click="closeDeleteSubserviceModal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -220,7 +220,7 @@
           <div class="modal-body">
             <form @submit.prevent="submitDeleteSubserviceForm">
               <div class="form-group">
-                <label for="subserviceSelect">Select Subservice to Delete</label>
+                <label for="subserviceSelect">Select Subprovision to Delete</label>
                 <select
                   class="form-control"
                   id="subserviceSelect"
@@ -247,14 +247,14 @@
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Confirm Delete Service</h5>
+            <h5 class="modal-title">Confirm Delete Provision</h5>
             <button type="button" class="close" @click="closeDeleteServiceModal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
           <div class="modal-body">
             <p>Are you sure you want to delete "{{ selectedService.service_info.service_name }}"?</p>
-            <p>This will also delete all associated subservices.</p>
+            <p>This will also delete all associated subprovisions.</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" @click="closeDeleteServiceModal">Cancel</button>
@@ -269,7 +269,7 @@
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Edit Service</h5>
+            <h5 class="modal-title">Edit Provision</h5>
             <button type="button" class="close" @click="closeEditServiceModal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -277,7 +277,7 @@
           <div class="modal-body">
             <form @submit.prevent="submitEditServiceForm">
               <div class="form-group">
-                <label for="editServiceName">Service Name</label>
+                <label for="editServiceName">Provision Name</label>
                 <input
                   type="text"
                   class="form-control"
@@ -287,7 +287,7 @@
                 />
               </div>
               <div class="form-group">
-                <label for="editServiceDescription">Service Description</label>
+                <label for="editServiceDescription">Provision Description</label>
                 <textarea
                   class="form-control"
                   id="editServiceDescription"
@@ -311,7 +311,7 @@
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Edit Subservice</h5>
+            <h5 class="modal-title">Edit Subprovision</h5>
             <button type="button" class="close" @click="closeEditSubserviceModal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -319,7 +319,7 @@
           <div class="modal-body">
             <form @submit.prevent="submitEditSubserviceForm">
               <div class="form-group">
-                <label for="editSubserviceName">Subservice Name</label>
+                <label for="editSubserviceName">Subprovision Name</label>
                 <input
                   type="text"
                   class="form-control"

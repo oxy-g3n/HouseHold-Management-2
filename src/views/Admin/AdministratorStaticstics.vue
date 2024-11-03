@@ -120,9 +120,9 @@
                 <span class="value">
                   <template v-if="request.rating !== null">
                     <span class="stars">
-                      {{ '★'.repeat(request.rating) }}{{ '☆'.repeat(5 - request.rating) }}
+                      {{ '★'.repeat(Math.ceil(request.rating/2)) }}{{ '☆'.repeat(5-(Math.ceil(request.rating/2))) }}
                     </span>
-                    <span class="rating-number">({{ request.rating }}/5)</span>
+                    <span class="rating-number">({{ request.rating }}/10)</span>
                   </template>
                   <span v-else>Not rated</span>
                 </span>
@@ -213,7 +213,7 @@ const filteredRequests = computed(() => {
     const fetchServicemen = async () => {
       const token = localStorage.getItem("admin_Token");
       const response = await axios.get(
-        "http://127.0.0.1:5000/users/getServicemen",
+        "http://127.0.0.1:5000/users/getProviders",
         {
           headers: {
             "Content-Type": "application/json",
@@ -227,7 +227,7 @@ const filteredRequests = computed(() => {
     const fetchCustomers = async () => {
       const token = localStorage.getItem("admin_Token");
       const response = await axios.get(
-        "http://127.0.0.1:5000/users/getCustomers",
+        "http://127.0.0.1:5000/users/getConsumers",
         {
           headers: {
             "Content-Type": "application/json",
@@ -449,7 +449,7 @@ const filteredRequests = computed(() => {
     async fetchServicemen() {
       const token = localStorage.getItem("admin_Token");
       const response = await axios.get(
-        "http://127.0.0.1:5000/users/getServicemen",
+        "http://127.0.0.1:5000/users/getProviders",
         {
           headers: {
             "Content-Type": "application/json",
@@ -462,7 +462,7 @@ const filteredRequests = computed(() => {
     async fetchCustomers() {
       const token = localStorage.getItem("admin_Token");
       const response = await axios.get(
-        "http://127.0.0.1:5000/users/getCustomers",
+        "http://127.0.0.1:5000/users/getConsumers",
         {
           headers: {
             "Content-Type": "application/json",
