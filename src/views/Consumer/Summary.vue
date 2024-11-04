@@ -169,7 +169,7 @@ export default {
         const customerId = localStorage.getItem('cust_id');
         const token = localStorage.getItem('cust_Token');
         const response = await axios.get(
-          `http://127.0.0.1:5000/requests/listMyServices/${customerId}`,
+          `http://127.0.0.1:5000/provision_requests/get_consumer_requests/${customerId}`,
           {
             headers: {
               'Content-Type': 'application/json',

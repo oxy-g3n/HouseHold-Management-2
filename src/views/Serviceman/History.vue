@@ -167,7 +167,7 @@ export default {
         const servicemanId = localStorage.getItem('service_id');
         const token = localStorage.getItem('service_Token');
         const response = await axios.get(
-          `http://127.0.0.1:5000/requests/listServices/${servicemanId}`,
+          `http://127.0.0.1:5000/provision_requests/get_provider_requests/${servicemanId}`,
           {
             headers: {
               'Content-Type': 'application/json',

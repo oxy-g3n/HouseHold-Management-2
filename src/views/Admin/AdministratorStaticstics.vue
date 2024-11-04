@@ -199,7 +199,7 @@ const filteredRequests = computed(() => {
     const fetchAllRequests = async () => {
       const token = localStorage.getItem("admin_Token");
       const response = await axios.get(
-        "http://127.0.0.1:5000/requests/listAllServices",
+        "http://127.0.0.1:5000/provision_requests/get_all_requests",
         {
           headers: {
             "Content-Type": "application/json",
@@ -213,7 +213,7 @@ const filteredRequests = computed(() => {
     const fetchServicemen = async () => {
       const token = localStorage.getItem("admin_Token");
       const response = await axios.get(
-        "http://127.0.0.1:5000/users/getProviders",
+        "http://127.0.0.1:5000/end_users/getProviders",
         {
           headers: {
             "Content-Type": "application/json",
@@ -227,7 +227,7 @@ const filteredRequests = computed(() => {
     const fetchCustomers = async () => {
       const token = localStorage.getItem("admin_Token");
       const response = await axios.get(
-        "http://127.0.0.1:5000/users/getConsumers",
+        "http://127.0.0.1:5000/end_users/getConsumers",
         {
           headers: {
             "Content-Type": "application/json",
@@ -436,7 +436,7 @@ const filteredRequests = computed(() => {
     async fetchAllRequests() {
       const token = localStorage.getItem("admin_Token");
       const response = await axios.get(
-        "http://127.0.0.1:5000/requests/listAllServices",
+        "http://127.0.0.1:5000/provision_requests/get_all_requests",
         {
           headers: {
             "Content-Type": "application/json",
@@ -449,7 +449,7 @@ const filteredRequests = computed(() => {
     async fetchServicemen() {
       const token = localStorage.getItem("admin_Token");
       const response = await axios.get(
-        "http://127.0.0.1:5000/users/getProviders",
+        "http://127.0.0.1:5000/end_users/getProviders",
         {
           headers: {
             "Content-Type": "application/json",
@@ -462,7 +462,7 @@ const filteredRequests = computed(() => {
     async fetchCustomers() {
       const token = localStorage.getItem("admin_Token");
       const response = await axios.get(
-        "http://127.0.0.1:5000/users/getConsumers",
+        "http://127.0.0.1:5000/end_users/getConsumers",
         {
           headers: {
             "Content-Type": "application/json",

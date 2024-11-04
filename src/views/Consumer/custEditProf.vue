@@ -192,7 +192,7 @@ export default {
         const token = localStorage.getItem('cust_Token')
         
         const response = await axios.get(
-          `http://127.0.0.1:5000/users/getCustomer/${customerId}`,
+          `http://127.0.0.1:5000/end_users/getConsumer/${customerId}`,
           {
             headers: { Authorization: token }
           }
@@ -225,7 +225,7 @@ export default {
 
       try {
         const response = await axios.put(
-          'http://127.0.0.1:5000/users/update_profile',
+          'http://127.0.0.1:5000/end_users/update_user',
           submitData,
           {
             headers: {

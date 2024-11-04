@@ -112,7 +112,7 @@ export default {
         const authKey = localStorage.getItem("service_Token");
         
         const response = await axios.get(
-          `http://127.0.0.1:5000/requests/listServices/${technician}`,
+          `http://127.0.0.1:5000/provision_requests/get_provider_requests/${technician}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -136,7 +136,7 @@ export default {
         const authKey = localStorage.getItem("service_Token");
         const result = await axios({
           method: 'PUT',
-          url: "http://127.0.0.1:5000/requests/editRequest",
+          url: "http://127.0.0.1:5000/provision_requests/edit_request",
           data: {
             serviceRequest_id: taskId,
             status: newStatus,

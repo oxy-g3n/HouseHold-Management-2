@@ -291,7 +291,7 @@ export default {
       }
 
       const formPayload = new FormData()
-      formPayload.append('action', 'service_reg')
+      formPayload.append('action', 'provider')
       formPayload.append('username', registrationDetails.professionalId)
       formPayload.append('password', registrationDetails.securityKey)
       formPayload.append('mail', registrationDetails.emailContact)
@@ -305,7 +305,7 @@ export default {
       formPayload.append('portfolio', registrationDetails.portfolioDocument)
 
       try {
-        const response = await axios.post('http://127.0.0.1:5000/users/register', formPayload, {
+        const response = await axios.post('http://127.0.0.1:5000/end_users/register', formPayload, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
         showNotification(response.data, 'success')
@@ -318,7 +318,7 @@ export default {
 
     const fetchExpertiseAreas = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/services/listServices')
+        const response = await axios.get('http://127.0.0.1:5000/provisions/getProvisions')
         expertiseAreas.push(...response.data)
       } catch (error) {
         console.error('Error fetching expertise areas:', error)

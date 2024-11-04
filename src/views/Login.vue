@@ -121,7 +121,7 @@ export default {
 
     const authenticateUser = async () => {
       try {
-        const response = await axios.post('http://127.0.0.1:5000/users/auth', {
+        const response = await axios.post('http://127.0.0.1:5000/end_users/login', {
           username: credentials.identifier,
           password: credentials.secret,
           action: "login"

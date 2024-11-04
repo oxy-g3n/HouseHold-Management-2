@@ -233,7 +233,7 @@ export default {
       try {
         const token = localStorage.getItem("cust_Token");
         const response = await axios.get(
-          "http://127.0.0.1:5000/services/listServices",
+          "http://127.0.0.1:5000/provisions/getProvisions",
           {
             headers: {
               "Content-Type": "application/json",
@@ -258,7 +258,7 @@ export default {
       try {
         const token = localStorage.getItem("cust_Token");
         const response = await axios.get(
-          "http://127.0.0.1:5000/users/getProviders",
+          "http://127.0.0.1:5000/end_users/getProviders",
           {
             headers: {
               "Content-Type": "application/json",
@@ -284,7 +284,7 @@ export default {
         const ratingPromises = this.allServicemen.map(async (serviceman) => {
           try {
             const response = await axios.get(
-              `http://127.0.0.1:5000/requests/averageRating/${serviceman.user_id}`,
+              `http://127.0.0.1:5000/provision_requests/get_rating/${serviceman.user_id}`,
               {
                 headers: {
                   "Content-Type": "application/json",
@@ -339,7 +339,7 @@ export default {
         };
 
         const response = await axios.post(
-          "http://127.0.0.1:5000/requests/addServiceRequest",
+          "http://127.0.0.1:5000/provision_requests/new_request",
           requestData,
           {
             headers: {

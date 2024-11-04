@@ -182,7 +182,7 @@ export default {
 
     const initiateRegistration = async () => {
       const enrollmentData = new FormData()
-      enrollmentData.append('action', 'cust_reg')
+      enrollmentData.append('action', 'consumer')
       enrollmentData.append('username', profileData.userIdentifier)
       enrollmentData.append('password', profileData.accessKey)
       enrollmentData.append('mail', profileData.contactEmail)
@@ -192,7 +192,7 @@ export default {
       enrollmentData.append('pin_code', profileData.postalCode)
 
       try {
-        const response = await axios.post('http://127.0.0.1:5000/users/register', enrollmentData, {
+        const response = await axios.post('http://127.0.0.1:5000/end_users/register', enrollmentData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },

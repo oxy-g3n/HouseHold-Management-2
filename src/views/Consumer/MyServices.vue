@@ -155,7 +155,7 @@ export default {
         const token = localStorage.getItem("cust_Token");
         
         const response = await axios.get(
-          `http://127.0.0.1:5000/requests/listMyServices/${customerId}`,
+          `http://127.0.0.1:5000/provision_requests/get_consumer_requests/${customerId}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -185,7 +185,7 @@ export default {
 
         const response = await axios({
           method: 'PUT',
-          url: "http://127.0.0.1:5000/requests/editRequest",
+          url: "http://127.0.0.1:5000/provision_requests/edit_request",
           data: payload,
           headers: {
             "Content-Type": "application/json",

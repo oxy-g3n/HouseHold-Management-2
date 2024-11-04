@@ -185,8 +185,8 @@ export default {
         };
 
         const [providerResponse, consumerResponse] = await Promise.all([
-          axios.get("http://127.0.0.1:5000/users/getProviders", { headers }),
-          axios.get("http://127.0.0.1:5000/users/getConsumers", { headers })
+          axios.get("http://127.0.0.1:5000/end_users/getProviders", { headers }),
+          axios.get("http://127.0.0.1:5000/end_users/getConsumers", { headers })
         ]);
 
         providers.value = providerResponse.data;
@@ -202,7 +202,7 @@ export default {
       try {
         const token = localStorage.getItem("admin_Token");
         await axios.put(
-          `http://127.0.0.1:5000/users/update_approval/${user.user_id}`,
+          `http://127.0.0.1:5000/end_users/approval/${user.user_id}`,
           { approval: (!user.approval).toString() },
           {
             headers: {
@@ -219,7 +219,7 @@ export default {
     };
 
     const showPdfPreview = (user) => {
-      window.open(`http://127.0.0.1:5000/users/getpdf/${user.user_id}`, '_blank');
+      window.open(`http://127.0.0.1:5000/end_users/get_portfolio/${user.user_id}`, '_blank');
     };
 
     // Initialize data on component creation

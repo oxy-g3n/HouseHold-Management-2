@@ -284,14 +284,14 @@
   
       const fetchAvailableServices = async () => {
         try {
-          const response = await axios.get('http://127.0.0.1:5000/services/listServices');
+          const response = await axios.get('http://127.0.0.1:5000/provisions/getProvisions');
           availableServices.value = response.data;
         } catch (error) {
           console.error('Error fetching services:', error);
           displayNotification('Failed to load services', 'error');
         }
       };
-  
+
       const fetchUserData = async () => {
         try {
           const userId = localStorage.getItem('service_id');
@@ -299,12 +299,12 @@
             throw new Error('User ID not found');
           }
   
-          const response = await axios.get(`http://127.0.0.1:5000/users/getServiceman/${userId}`, {
+          const response = await axios.get(`http://127.0.0.1:5000/end_users/getProvider/${userId}`, {
             headers: {
               'Authorization': `${localStorage.getItem('service_Token')}`
             }
           });
-  
+
           if (response.data && response.data.length > 0) {
             const userData = response.data[0];
             profileData.fullName = userData.full_name;
@@ -348,7 +348,7 @@
         if (profileData.portfolioFile) formData.append('portfolio', profileData.portfolioFile);
   
         try {
-          const response = await axios.put('http://127.0.0.1:5000/users/update_profile', formData, {
+          const response = await axios.put('http://127.0.0.1:5000/end_users/update_user', formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
               'Authorization': `${localStorage.getItem('service_Token')}`

@@ -427,7 +427,7 @@ export default {
       this.loading = true;
       try {
         const token = localStorage.getItem('admin_Token');
-        const response = await axios.get('http://127.0.0.1:5000/services/listServices', {
+        const response = await axios.get('http://127.0.0.1:5000/provisions/getProvisions', {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `${token}`
@@ -479,7 +479,7 @@ export default {
       try {
         const token = localStorage.getItem('admin_Token');
         const response = await axios.post(
-          "http://127.0.0.1:5000/services/createService",
+          "http://127.0.0.1:5000/provisions/newProvision",
           {
             action: "createService",
             service_name: this.createServiceForm.service_name,
@@ -503,7 +503,7 @@ export default {
     async submitAddSubserviceForm() {
       try {
         const token = localStorage.getItem('admin_Token');
-        const response = await axios.post( "http://127.0.0.1:5000/services/SubService",
+        const response = await axios.post( "http://127.0.0.1:5000/provisions/create_delete_subProvision",
           {
             action: "createService",
             sub_name: this.addSubserviceForm.subservice_name,
@@ -529,7 +529,7 @@ export default {
       try {
         const token = localStorage.getItem('admin_Token');
         const response = await axios.post(
-          "http://127.0.0.1:5000/services/SubService",
+          "http://127.0.0.1:5000/provisions/create_delete_subProvision",
           {
             action: "deleteService",
             sub_name: this.deleteSubserviceForm.subservice_name,
@@ -553,7 +553,7 @@ export default {
       try {
         const token = localStorage.getItem('admin_Token');
         const response = await axios.post(
-          "http://127.0.0.1:5000/services/createService",
+          "http://127.0.0.1:5000/provisions/newProvision",
           {
             action: "deleteService",
             service_name: this.selectedService.service_info.service_name
@@ -598,7 +598,7 @@ export default {
     async submitEditServiceForm() {
       try {
         const token = localStorage.getItem('admin_Token');
-        const response = await axios.put("http://127.0.0.1:5000/services/EditService",
+        const response = await axios.put("http://127.0.0.1:5000/provisions/editProvision",
           {
             action: "service",
             service_actual_id: this.editServiceForm.service_actual_id,
@@ -623,7 +623,7 @@ export default {
     async submitEditSubserviceForm() {
       try {
         const token = localStorage.getItem('admin_Token');
-        const response = await axios.put("http://127.0.0.1:5000/services/EditService",
+        const response = await axios.put("http://127.0.0.1:5000/provisions/editProvision",
           {
             action: "subservice",
             subservice_id: this.editSubserviceForm.subservice_id,
