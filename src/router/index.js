@@ -1,25 +1,25 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 // import HomeView from "../views/HomeView.vue";
-import Login from "../views/Login.vue";
-import RegisterServiceman from "@/views/Serviceman/RegisterServiceman.vue";
-import RegisterCustomer from "@/views/Consumer/RegisterCustomer.vue";
+import Login from "../views/SignIn.vue";
+import RegisterServiceman from "@/views/Serviceman/ProviderRegistration.vue";
+import RegisterCustomer from "@/views/Consumer/ConsumerRegistration.vue";
 
 
 //Dashes
-import ServiceDash from "@/views/Serviceman/ServiceDash.vue";
+import ServiceDash from "@/views/Serviceman/ProviderDashboard.vue";
 import AdminDash from "@/views/Admin/AdministratorDashboard.vue";
-import CustDash from "@/views/Consumer/CustDash.vue";
+import CustDash from "@/views/Consumer/ConsumerDashboard.vue";
 
 //Customer
-import MyServices from "@/views/Consumer/MyServices.vue";
-import SearchServices from "@/views/Consumer/SearchServices.vue";
-import Summary from "@/views/Consumer/Summary.vue";
-import custEditProf from "@/views/Consumer/custEditProf.vue";
+import MyServices from "@/views/Consumer/ConsumerProvisions.vue";
+import SearchServices from "@/views/Consumer/ConsumerSearchProvisions.vue";
+import Summary from "@/views/Consumer/ConsumerStatsPage.vue";
+import custEditProf from "@/views/Consumer/ConsumerProfileUpdate.vue";
 
 //Servicemen
-import Requests from "@/views/Serviceman/Requests.vue";
-import History from "@/views/Serviceman/History.vue";
-import Editprof from "@/views/Serviceman/Editprof.vue";
+import Requests from "@/views/Serviceman/ProviderRequests.vue";
+import History from "@/views/Serviceman/ProviderStatsPage.vue";
+import Editprof from "@/views/Serviceman/ProviderProfileUpdate.vue";
 
 //Admin
 import AdminProvisions from "@/views/Admin/AdministratorProvisions.vue";
