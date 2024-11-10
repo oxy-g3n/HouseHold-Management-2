@@ -73,6 +73,8 @@
                     id="phoneContact"
                     v-model="registrationDetails.phoneContact"
                     class="custom-input form-control"
+                    maxlength="10"
+                    pattern="[0-9]*"
                     required
                   >
                   <label for="phoneContact">Contact Number</label>
@@ -296,7 +298,7 @@ export default {
       formPayload.append('password', registrationDetails.securityKey)
       formPayload.append('mail', registrationDetails.emailContact)
       formPayload.append('mobile', registrationDetails.phoneContact)
-      formPayload.append('full_name', registrationDetails.professionalName)
+      formPayload.append('full_name', registrationDetails.professionalName.toUpperCase())
       formPayload.append('address', registrationDetails.locationDetails)
       formPayload.append('pin_code', registrationDetails.areaCode)
       formPayload.append('service', registrationDetails.selectedExpertise.service_info.service_name)

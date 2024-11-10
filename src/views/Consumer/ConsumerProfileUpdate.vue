@@ -53,6 +53,8 @@
                       id="securityMobile"
                       v-model="formData.mobile"
                       placeholder="Mobile number"
+                      maxlength="10"
+                      pattern="[0-9]*"
                       required
                     >
                     <label for="securityMobile">Mobile Number</label>
@@ -68,7 +70,7 @@
                   <div class="form-floating mb-3">
                     <input
                       type="text"
-                      class="form-control"
+                      class="form-control text-uppercase"
                       id="personalName"
                       v-model="formData.full_name"
                       placeholder="Full name"
@@ -220,7 +222,7 @@ export default {
       
       Object.entries(formData).forEach(([key, value]) => {
         if (key === 'password' && !value) return
-        submitData.append(key === 'fullName' ? 'full_name' : key, value)
+        submitData.append(key === 'fullName' ? 'full_name' : key, value.toUpperCase())
       })
 
       try {

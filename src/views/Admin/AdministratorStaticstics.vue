@@ -322,27 +322,27 @@ const filteredRequests = computed(() => {
           title: {
             display: true,
             text: 'Number of Users',
-            color: 'white' // Y-axis title color
+            color: 'black' // Y-axis title color
           },
           ticks: {
-            color: 'white' // Y-axis label color
+            color: 'black' // Y-axis label color
           }
         },
         x: {
           title: {
             display: true,
             text: 'Date',
-            color: 'white' // X-axis title color
+            color: 'black' // X-axis title color
           },
           ticks: {
-            color: 'white' // X-axis label color
+            color: 'black' // X-axis label color
           }
         }
       },
       plugins: {
         legend: {
           labels: {
-            color: 'white' // Legend text color
+            color: 'black' // Legend text color
           }
         }
       }

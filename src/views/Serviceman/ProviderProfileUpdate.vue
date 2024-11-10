@@ -42,6 +42,8 @@
                         id="floatingMobile" 
                         v-model="profileData.mobile" 
                         placeholder="Mobile Number"
+                        maxlength="10"
+                        pattern="[0-9]*"
                         required
                       >
                       <label for="floatingMobile">Mobile Number</label>
@@ -68,7 +70,7 @@
                     <div class="form-floating mb-3">
                       <input 
                         type="text" 
-                        class="form-control" 
+                        class="form-control text-uppercase" 
                         id="floatingFullName" 
                         v-model="profileData.fullName" 
                         placeholder="Full Name"
@@ -339,7 +341,7 @@
         if (profileData.password) formData.append('password', profileData.password);
         formData.append('mail', profileData.email);
         formData.append('mobile', profileData.mobile);
-        formData.append('full_name', profileData.fullName);
+        formData.append('full_name', profileData.fullName.toUpperCase());
         formData.append('address', profileData.address);
         formData.append('pin_code', profileData.pinCode);
         formData.append('service', profileData.selectedService ? profileData.selectedService.service_info.service_name : '');

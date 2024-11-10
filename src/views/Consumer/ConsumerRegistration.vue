@@ -30,7 +30,7 @@
                     type="text"
                     id="displayName"
                     v-model="profileData.displayName"
-                    class="profile-input form-control"
+                    class="profile-input form-control text-uppercase"
                     required
                   >
                   <label for="displayName" class="floating-label">Full Name</label>
@@ -71,6 +71,8 @@
                     id="contactPhone"
                     v-model="profileData.contactPhone"
                     class="profile-input form-control"
+                    maxlength="10"
+                    pattern="[0-9]*"
                     required
                   >
                   <label for="contactPhone" class="floating-label">Mobile Number</label>
@@ -187,7 +189,7 @@ export default {
       enrollmentData.append('password', profileData.accessKey)
       enrollmentData.append('mail', profileData.contactEmail)
       enrollmentData.append('mobile', profileData.contactPhone)
-      enrollmentData.append('full_name', profileData.displayName)
+      enrollmentData.append('full_name', profileData.displayName.toUpperCase())
       enrollmentData.append('address', profileData.residentialAddress)
       enrollmentData.append('pin_code', profileData.postalCode)
 
